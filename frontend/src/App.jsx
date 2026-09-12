@@ -10,26 +10,24 @@ function App(){
   useEffect(()=>{
 
     api.get("/")
-    .then((respuesta)=>{
+      .then((respuesta)=>{
 
-      setMensaje(respuesta.data.mensaje);
+        setMensaje(respuesta.data.mensaje);
 
-    })
-    .catch((error)=>{
+      })
+      .catch((error)=>{
 
-      console.log(error);
+        console.log("Error conectando con backend:", error);
 
-    });
+      });
 
 
   },[]);
 
 
-
   return (
 
     <>
-
       <h1>
         ELECTRONOVA
       </h1>
