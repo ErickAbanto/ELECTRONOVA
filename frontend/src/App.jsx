@@ -29,7 +29,7 @@ function App(){
 
     <>
       <h1>
-        ELECTRONOVA0011
+        ELECTRONOVA
       </h1>
 
       <h2>
