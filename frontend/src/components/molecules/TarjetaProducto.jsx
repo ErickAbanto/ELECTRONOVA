@@ -1,6 +1,4 @@
-
-
-import './TarjetaProducto.css';
+import "./TarjetaProducto.css";
 
 const TarjetaProducto = ({ imagen, titulo, precio, onClick }) => {
   return (

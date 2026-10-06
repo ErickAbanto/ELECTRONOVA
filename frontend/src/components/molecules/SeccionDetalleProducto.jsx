@@ -1,5 +1,9 @@
-
-const SeccionDetalleProducto = ({ titulo, contenido, preformateado = false, conScroll = false }) => {
+const SeccionDetalleProducto = ({
+  titulo,
+  contenido,
+  preformateado = false,
+  conScroll = false,
+}) => {
   if (!contenido) return null;
 
   return (

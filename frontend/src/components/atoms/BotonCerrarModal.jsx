@@ -1,5 +1,4 @@
-
-import { X } from 'lucide-react';
+import { X } from "lucide-react";
 
 const BotonCerrarModal = ({ onClick, className = "btn-cerrar-detalle" }) => {
   return (

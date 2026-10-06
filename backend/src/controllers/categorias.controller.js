@@ -12,7 +12,8 @@ export const getCategorias = async (req, res) => {
 export const getCategoriaById = async (req, res) => {
   try {
     const categoria = await Categoria.findById(req.params.id);
-    if (!categoria) return res.status(404).json({ message: "Categoría no encontrada" });
+    if (!categoria)
+      return res.status(404).json({ message: "Categoría no encontrada" });
     res.status(200).json(categoria);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -31,8 +32,13 @@ export const createCategoria = async (req, res) => {
 
 export const updateCategoria = async (req, res) => {
   try {
-    const categoriaActualizada = await Categoria.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' });
-    if (!categoriaActualizada) return res.status(404).json({ message: "Categoría no encontrada" });
+    const categoriaActualizada = await Categoria.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { returnDocument: "after" },
+    );
+    if (!categoriaActualizada)
+      return res.status(404).json({ message: "Categoría no encontrada" });
     res.status(200).json(categoriaActualizada);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -42,7 +48,8 @@ export const updateCategoria = async (req, res) => {
 export const deleteCategoria = async (req, res) => {
   try {
     const categoriaEliminada = await Categoria.findByIdAndDelete(req.params.id);
-    if (!categoriaEliminada) return res.status(404).json({ message: "Categoría no encontrada" });
+    if (!categoriaEliminada)
+      return res.status(404).json({ message: "Categoría no encontrada" });
     res.status(200).json({ message: "Categoría eliminada" });
   } catch (error) {
     res.status(500).json({ message: error.message });

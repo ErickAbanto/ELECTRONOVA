@@ -8,7 +8,9 @@ dotenv.config();
 export const login = async (req, res) => {
   const { correo, contraseña } = req.body;
   if (!correo || !contraseña) {
-    return res.status(400).json({ message: "Por favor, envíe correo y contraseña" });
+    return res
+      .status(400)
+      .json({ message: "Por favor, envíe correo y contraseña" });
   }
   try {
     const admin = await Administrador.findOne({ correo });
@@ -24,17 +26,17 @@ export const login = async (req, res) => {
     const token = jwt.sign(
       { id: admin._id },
       process.env.JWT_SECRET || "secreto_desarrollo",
-      { expiresIn: "1d" }
+      { expiresIn: "1d" },
     );
 
-    res.status(200).json({ 
+    res.status(200).json({
       message: "Login exitoso",
       token,
       admin: {
         id: admin._id,
         nombre: admin.nombre,
-        correo: admin.correo
-      }
+        correo: admin.correo,
+      },
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -43,7 +45,11 @@ export const login = async (req, res) => {
 
 export const logout = async (req, res) => {
   try {
-    res.status(200).json({ message: "Logout exitoso. Por favor, borre el token en el cliente." });
+    res
+      .status(200)
+      .json({
+        message: "Logout exitoso. Por favor, borre el token en el cliente.",
+      });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -51,32 +57,39 @@ export const logout = async (req, res) => {
 
 export const forgotPassword = async (req, res) => {
   const { correo } = req.body;
-  if (!correo) return res.status(400).json({ message: "El correo es obligatorio" });
+  if (!correo)
+    return res.status(400).json({ message: "El correo es obligatorio" });
 
   try {
     const admin = await Administrador.findOne({ correo });
-    if (!admin) return res.status(404).json({ message: "No existe un administrador con ese correo" });
+    if (!admin)
+      return res
+        .status(404)
+        .json({ message: "No existe un administrador con ese correo" });
 
     // Generar token que expira en 15 minutos. Usamos la contraseña actual como parte del secreto
     // Así, si cambia la contraseña, el token se invalida automáticamente.
-    const secret = (process.env.JWT_SECRET || "secreto_desarrollo") + admin.contraseña;
-    const token = jwt.sign({ correo: admin.correo, id: admin._id }, secret, { expiresIn: '15m' });
+    const secret =
+      (process.env.JWT_SECRET || "secreto_desarrollo") + admin.contraseña;
+    const token = jwt.sign({ correo: admin.correo, id: admin._id }, secret, {
+      expiresIn: "15m",
+    });
 
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
     const resetLink = `${frontendUrl}/reset-password?token=${token}&id=${admin._id}`;
 
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
+        pass: process.env.EMAIL_PASS,
+      },
     });
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: admin.correo,
-      subject: 'Recuperación de Contraseña - ELECTRONOVA',
+      subject: "Recuperación de Contraseña - ELECTRONOVA",
       html: `
         <h2>Recuperación de Contraseña</h2>
         <p>Hola ${admin.nombre},</p>
@@ -84,14 +97,23 @@ export const forgotPassword = async (req, res) => {
         <a href="${resetLink}" style="display:inline-block; padding:10px 20px; background-color:#0d47a1; color:white; text-decoration:none; border-radius:5px;">Restablecer Contraseña</a>
         <p>Este enlace expirará en 15 minutos.</p>
         <p>Si no solicitaste este cambio, ignora este correo.</p>
-      `
+      `,
     };
 
     await transporter.sendMail(mailOptions);
-    res.status(200).json({ message: "Se ha enviado un enlace de recuperación a su correo." });
+    res
+      .status(200)
+      .json({
+        message: "Se ha enviado un enlace de recuperación a su correo.",
+      });
   } catch (error) {
     console.error("Error enviando correo:", error);
-    res.status(500).json({ message: "Error al procesar la solicitud o al enviar el correo. Verifique sus credenciales." });
+    res
+      .status(500)
+      .json({
+        message:
+          "Error al procesar la solicitud o al enviar el correo. Verifique sus credenciales.",
+      });
   }
 };
 
@@ -103,15 +125,19 @@ export const resetPassword = async (req, res) => {
 
   try {
     const admin = await Administrador.findById(id);
-    if (!admin) return res.status(404).json({ message: "Administrador no encontrado" });
+    if (!admin)
+      return res.status(404).json({ message: "Administrador no encontrado" });
 
-    const secret = (process.env.JWT_SECRET || "secreto_desarrollo") + admin.contraseña;
-    
+    const secret =
+      (process.env.JWT_SECRET || "secreto_desarrollo") + admin.contraseña;
+
     // Verificar token (si falla lanzará un error)
     try {
       jwt.verify(token, secret);
     } catch (err) {
-      return res.status(400).json({ message: "El enlace es inválido o ha expirado" });
+      return res
+        .status(400)
+        .json({ message: "El enlace es inválido o ha expirado" });
     }
 
     admin.contraseña = nuevaContrasena;
@@ -122,6 +148,3 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-
-

@@ -1,8 +1,16 @@
-import { useState } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import { LayoutDashboard, FolderTree, PackageSearch, LogOut, Menu, X, Store } from 'lucide-react';
-import './AdminLayout.css';
+import { useState } from "react";
+import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import {
+  LayoutDashboard,
+  FolderTree,
+  PackageSearch,
+  LogOut,
+  Menu,
+  X,
+  Store,
+} from "lucide-react";
+import "./AdminLayout.css";
 
 export default function AdminLayout() {
   const { admin, logout } = useAuth();
@@ -10,7 +18,7 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   const toggleSidebar = () => {
@@ -19,55 +27,66 @@ export default function AdminLayout() {
 
   return (
     <div className="admin-layout">
-      <aside className={`admin-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
+      <aside className={`admin-sidebar ${sidebarOpen ? "open" : "closed"}`}>
         <div className="sidebar-header">
           <div className="sidebar-logo">
             <span className="logo-foco">💡</span>
             {sidebarOpen && <span>Admin Panel</span>}
           </div>
-          <button className="btn-toggle-sidebar mobile-only" onClick={toggleSidebar}>
+          <button
+            className="btn-toggle-sidebar mobile-only"
+            onClick={toggleSidebar}
+          >
             <X size={20} />
           </button>
         </div>
 
         <div className="sidebar-user">
-          <div className="user-avatar">{admin?.nombre?.charAt(0).toUpperCase() || 'A'}</div>
+          <div className="user-avatar">
+            {admin?.nombre?.charAt(0).toUpperCase() || "A"}
+          </div>
           {sidebarOpen && (
             <div className="user-info">
-              <span className="user-name">{admin?.nombre || 'Administrador'}</span>
+              <span className="user-name">
+                {admin?.nombre || "Administrador"}
+              </span>
               <span className="user-role">Super Admin</span>
             </div>
           )}
         </div>
 
         <nav className="sidebar-nav">
-          <NavLink 
-            to="/admin/dashboard" 
-            className={({isActive}) => isActive ? "nav-item active" : "nav-item"}
+          <NavLink
+            to="/admin/dashboard"
+            className={({ isActive }) =>
+              isActive ? "nav-item active" : "nav-item"
+            }
             end
           >
             <LayoutDashboard size={20} />
             {sidebarOpen && <span>Resumen</span>}
           </NavLink>
 
-          <NavLink 
-            to="/admin/categorias" 
-            className={({isActive}) => isActive ? "nav-item active" : "nav-item"}
+          <NavLink
+            to="/admin/categorias"
+            className={({ isActive }) =>
+              isActive ? "nav-item active" : "nav-item"
+            }
           >
             <FolderTree size={20} />
             {sidebarOpen && <span>Categorías</span>}
           </NavLink>
 
-          <NavLink 
-            to="/admin/productos" 
-            className={({isActive}) => isActive ? "nav-item active" : "nav-item"}
+          <NavLink
+            to="/admin/productos"
+            className={({ isActive }) =>
+              isActive ? "nav-item active" : "nav-item"
+            }
           >
             <PackageSearch size={20} />
             {sidebarOpen && <span>Productos</span>}
           </NavLink>
         </nav>
-
-
       </aside>
 
       <main className="admin-main">
@@ -76,7 +95,10 @@ export default function AdminLayout() {
             <Menu size={24} />
           </button>
           <div className="topbar-right">
-            <button className="topbar-btn btn-volver-tienda" onClick={() => navigate('/productos')}>
+            <button
+              className="topbar-btn btn-volver-tienda"
+              onClick={() => navigate("/productos")}
+            >
               <Store size={18} />
               <span>Ir a Productos</span>
             </button>
@@ -92,7 +114,9 @@ export default function AdminLayout() {
         </div>
       </main>
 
-      {!sidebarOpen && <div className="sidebar-overlay" onClick={toggleSidebar}></div>}
+      {!sidebarOpen && (
+        <div className="sidebar-overlay" onClick={toggleSidebar}></div>
+      )}
     </div>
   );
 }

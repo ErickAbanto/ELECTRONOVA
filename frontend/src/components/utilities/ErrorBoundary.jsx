@@ -1,6 +1,6 @@
-import { Component } from 'react';
-import './ErrorBoundary.css';
-import { AlertTriangle } from 'lucide-react';
+import { Component } from "react";
+import "./ErrorBoundary.css";
+import { AlertTriangle } from "lucide-react";
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -28,12 +28,12 @@ class ErrorBoundary extends Component {
             <AlertTriangle className="error-icon" size={64} />
             <h1>¡Uy! Algo salió mal.</h1>
             <p>
-              Ha ocurrido un error inesperado. Estamos trabajando para solucionarlo.
-              Por favor, intenta recargar la página.
+              Ha ocurrido un error inesperado. Estamos trabajando para
+              solucionarlo. Por favor, intenta recargar la página.
             </p>
             <div className="error-boundary-actions">
-              <button 
-                className="btn-recargar" 
+              <button
+                className="btn-recargar"
                 onClick={() => window.location.reload()}
               >
                 Recargar página
@@ -47,7 +47,7 @@ class ErrorBoundary extends Component {
       );
     }
 
-    return this.props.children; 
+    return this.props.children;
   }
 }
 

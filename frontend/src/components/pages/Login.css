@@ -9,7 +9,13 @@
 .login-panel-izquierdo {
   flex: 1;
   background-color: #0d284a; /* Azul oscuro del diseño */
-  background-image: linear-gradient(135deg, rgba(13, 40, 74, 0.9) 0%, rgba(13, 40, 74, 0.7) 100%), url('https://images.unsplash.com/photo-1540340061722-9293d5163008?q=80&w=2071&auto=format&fit=crop');
+  background-image:
+    linear-gradient(
+      135deg,
+      rgba(13, 40, 74, 0.9) 0%,
+      rgba(13, 40, 74, 0.7) 100%
+    ),
+    url("https://images.unsplash.com/photo-1540340061722-9293d5163008?q=80&w=2071&auto=format&fit=crop");
   background-size: cover;
   background-position: center;
   color: white;
@@ -93,7 +99,8 @@
 }
 
 .slogan-cursiva {
-  font-family: 'Caveat', cursive, sans-serif; /* Requiere importar fuente o usar un estilo similar */
+  font-family:
+    "Caveat", cursive, sans-serif; /* Requiere importar fuente o usar un estilo similar */
   font-size: 2rem;
   color: rgba(255, 255, 255, 0.6);
   line-height: 1.2;
@@ -277,24 +284,24 @@
   .login-pagina-split {
     flex-direction: column;
   }
-  
+
   .login-panel-izquierdo {
     padding: 3rem 2rem;
     align-items: center;
     text-align: center;
   }
-  
+
   .caracteristica-item {
     flex-direction: column;
     align-items: center;
     text-align: center;
     gap: 0.5rem;
   }
-  
+
   .divisor-amarillo {
     margin: 0 auto 2rem auto;
   }
-  
+
   .slogan-inferior {
     display: none;
   }
@@ -304,11 +311,11 @@
   .login-panel-derecho {
     padding: 1rem;
   }
-  
+
   .login-caja-blanca {
     padding: 2rem 1.5rem;
   }
-  
+
   .form-options {
     flex-direction: column;
     gap: 1rem;

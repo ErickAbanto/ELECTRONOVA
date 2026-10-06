@@ -4,8 +4,30 @@ import sharp from "sharp";
 
 export const getProductos = async (req, res) => {
   try {
-    const productos = await Producto.find().populate("idCategoria").populate({ path: "imagenes", perDocumentLimit: 1 });
-    res.status(200).json(productos);
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 9;
+
+    const options = {
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+      populate: [
+        { path: "idCategoria" },
+        { path: "imagenes", perDocumentLimit: 1 },
+      ],
+    };
+
+    const result = await Producto.paginate({}, options);
+
+    res.status(200).json({
+      message: "Productos obtenidos con éxito",
+      data: result.docs,
+      pagination: {
+        total: result.totalDocs,
+        page: result.page,
+        limit: result.limit,
+        totalPages: result.totalPages,
+      },
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -13,8 +35,11 @@ export const getProductos = async (req, res) => {
 
 export const getProductoById = async (req, res) => {
   try {
-    const producto = await Producto.findById(req.params.id).populate("idCategoria").populate("imagenes");
-    if (!producto) return res.status(404).json({ message: "Producto no encontrado" });
+    const producto = await Producto.findById(req.params.id)
+      .populate("idCategoria")
+      .populate("imagenes");
+    if (!producto)
+      return res.status(404).json({ message: "Producto no encontrado" });
     res.status(200).json(producto);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -24,34 +49,40 @@ export const getProductoById = async (req, res) => {
 export const createProducto = async (req, res) => {
   try {
     const data = { ...req.body };
-    
+
     if (req.files && req.files.length > 5) {
-      return res.status(400).json({ message: "No se pueden subir más de 5 imágenes por producto." });
+      return res
+        .status(400)
+        .json({
+          message: "No se pueden subir más de 5 imágenes por producto.",
+        });
     }
 
     const nuevoProducto = new Producto(data);
     const productoGuardado = await nuevoProducto.save();
 
     if (req.files && req.files.length > 0) {
-      const imagenesPromises = req.files.map(async file => {
+      const imagenesPromises = req.files.map(async (file) => {
         const compressedBuffer = await sharp(file.buffer)
-          .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
+          .resize(800, 800, { fit: "inside", withoutEnlargement: true })
           .jpeg({ quality: 80 })
           .toBuffer();
-          
-        const base64Data = compressedBuffer.toString('base64');
+
+        const base64Data = compressedBuffer.toString("base64");
         const ubicacion = `data:image/jpeg;base64,${base64Data}`;
         const nuevaImagen = new Imagen({
           idProducto: productoGuardado._id,
-          tipo: 'image/jpeg',
-          ubicacion: ubicacion
+          tipo: "image/jpeg",
+          ubicacion: ubicacion,
         });
         return nuevaImagen.save();
       });
       await Promise.all(imagenesPromises);
     }
-    
-    const productoFinal = await Producto.findById(productoGuardado._id).populate("imagenes");
+
+    const productoFinal = await Producto.findById(
+      productoGuardado._id,
+    ).populate("imagenes");
     res.status(201).json(productoFinal);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -66,7 +97,7 @@ export const updateProducto = async (req, res) => {
     if (req.body.imagenesExistentes) {
       try {
         const parseadas = JSON.parse(req.body.imagenesExistentes);
-        urlsExistentes = parseadas.map(u => {
+        urlsExistentes = parseadas.map((u) => {
           const match = u.match(/(\/uploads\/.*)/);
           return match ? match[1] : u;
         });
@@ -75,38 +106,54 @@ export const updateProducto = async (req, res) => {
       }
     }
 
-    const totalImages = urlsExistentes.length + (req.files ? req.files.length : 0);
+    const totalImages =
+      urlsExistentes.length + (req.files ? req.files.length : 0);
     if (totalImages > 5) {
-      return res.status(400).json({ message: "No se pueden tener más de 5 imágenes en total por producto." });
+      return res
+        .status(400)
+        .json({
+          message:
+            "No se pueden tener más de 5 imágenes en total por producto.",
+        });
     }
 
-    if (data.productoDestacado === 'true') data.productoDestacado = true;
-    if (data.productoDestacado === 'false') data.productoDestacado = false;
-    const productoActualizado = await Producto.findByIdAndUpdate(req.params.id, data, { returnDocument: 'after' });
-    if (!productoActualizado) return res.status(404).json({ message: "Producto no encontrado" });
+    if (data.productoDestacado === "true") data.productoDestacado = true;
+    if (data.productoDestacado === "false") data.productoDestacado = false;
+    const productoActualizado = await Producto.findByIdAndUpdate(
+      req.params.id,
+      data,
+      { returnDocument: "after" },
+    );
+    if (!productoActualizado)
+      return res.status(404).json({ message: "Producto no encontrado" });
 
     // Si hubo interacción con imágenes (vienen nuevas o vienen existentes)
-    if (req.body.imagenesExistentes !== undefined || (req.files && req.files.length > 0)) {
+    if (
+      req.body.imagenesExistentes !== undefined ||
+      (req.files && req.files.length > 0)
+    ) {
       const imagenesDB = await Imagen.find({ idProducto: req.params.id });
-      
-      const imagenesABorrar = imagenesDB.filter(img => !urlsExistentes.includes(img.ubicacion));
+
+      const imagenesABorrar = imagenesDB.filter(
+        (img) => !urlsExistentes.includes(img.ubicacion),
+      );
       for (const img of imagenesABorrar) {
         await Imagen.findByIdAndDelete(img._id);
       }
 
       if (req.files && req.files.length > 0) {
-        const imagenesPromises = req.files.map(async file => {
+        const imagenesPromises = req.files.map(async (file) => {
           const compressedBuffer = await sharp(file.buffer)
-            .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
+            .resize(800, 800, { fit: "inside", withoutEnlargement: true })
             .jpeg({ quality: 80 })
             .toBuffer();
 
-          const base64Data = compressedBuffer.toString('base64');
+          const base64Data = compressedBuffer.toString("base64");
           const ubicacion = `data:image/jpeg;base64,${base64Data}`;
           const nuevaImagen = new Imagen({
             idProducto: req.params.id,
-            tipo: 'image/jpeg',
-            ubicacion: ubicacion
+            tipo: "image/jpeg",
+            ubicacion: ubicacion,
           });
           return nuevaImagen.save();
         });
@@ -114,7 +161,9 @@ export const updateProducto = async (req, res) => {
       }
     }
 
-    const productoFinal = await Producto.findById(req.params.id).populate("imagenes");
+    const productoFinal = await Producto.findById(req.params.id).populate(
+      "imagenes",
+    );
     res.status(200).json(productoFinal);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -124,8 +173,9 @@ export const updateProducto = async (req, res) => {
 export const deleteProducto = async (req, res) => {
   try {
     const productoEliminado = await Producto.findByIdAndDelete(req.params.id);
-    if (!productoEliminado) return res.status(404).json({ message: "Producto no encontrado" });
-    
+    if (!productoEliminado)
+      return res.status(404).json({ message: "Producto no encontrado" });
+
     await Imagen.deleteMany({ idProducto: req.params.id });
 
     res.status(200).json({ message: "Producto eliminado" });
@@ -137,15 +187,39 @@ export const deleteProducto = async (req, res) => {
 export const searchProductos = async (req, res) => {
   try {
     const { q } = req.query;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 9;
+
     const query = {
       $or: [
-        { nombre: { $regex: q, $options: 'i' } },
-        { descripcionCorta: { $regex: q, $options: 'i' } },
-        { descripcionCompleta: { $regex: q, $options: 'i' } }
-      ]
+        { nombre: { $regex: q, $options: "i" } },
+        { descripcionCorta: { $regex: q, $options: "i" } },
+        { descripcionCompleta: { $regex: q, $options: "i" } },
+        { caracteristicas: { $regex: q, $options: "i" } },
+        { especificacionesTec: { $regex: q, $options: "i" } },
+      ],
     };
-    const productos = await Producto.find(query).populate("idCategoria").populate({ path: "imagenes", perDocumentLimit: 1 });
-    res.status(200).json(productos);
+
+    const options = {
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+      populate: [
+        { path: "idCategoria" },
+        { path: "imagenes", perDocumentLimit: 1 },
+      ],
+    };
+
+    const result = await Producto.paginate(query, options);
+    res.status(200).json({
+      message: "Productos encontrados con éxito",
+      data: result.docs,
+      pagination: {
+        total: result.totalDocs,
+        page: result.page,
+        limit: result.limit,
+        totalPages: result.totalPages,
+      },
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -154,12 +228,34 @@ export const searchProductos = async (req, res) => {
 export const filterProductos = async (req, res) => {
   try {
     const { categoria } = req.query;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 9;
+
     let query = {};
     if (categoria) {
       query.idCategoria = categoria;
     }
-    const productos = await Producto.find(query).populate("idCategoria").populate({ path: "imagenes", perDocumentLimit: 1 });
-    res.status(200).json(productos);
+
+    const options = {
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+      populate: [
+        { path: "idCategoria" },
+        { path: "imagenes", perDocumentLimit: 1 },
+      ],
+    };
+
+    const result = await Producto.paginate(query, options);
+    res.status(200).json({
+      message: "Productos filtrados con éxito",
+      data: result.docs,
+      pagination: {
+        total: result.totalDocs,
+        page: result.page,
+        limit: result.limit,
+        totalPages: result.totalPages,
+      },
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

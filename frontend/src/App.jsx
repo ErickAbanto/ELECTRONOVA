@@ -5,6 +5,7 @@ import PieDePagina from "./components/organisms/PieDePagina";
 import { Route, Routes } from "react-router-dom";
 import { PaginaInicio } from "./components/pages/PaginaInicio";
 import { Productos } from "./components/pages/Productos";
+import { DetalleProducto } from "./components/pages/DetalleProducto";
 
 import { Nosotros } from "./components/pages/Nosotros";
 import { Contacto } from "./components/pages/Contacto";
@@ -28,56 +29,87 @@ function App() {
     <ErrorBoundary>
       <AuthProvider>
         <Routes>
-          <Route path="/" element={
-            <>
-              <Encabezado theme={theme} setTheme={setTheme} />
-              <PaginaInicio />
-              <PieDePagina />
-            </>
-          } />
-          <Route path="/productos" element={
-            <>
-              <Encabezado theme={theme} setTheme={setTheme} />
-              <Productos />
-              <PieDePagina />
-            </>
-          } />
-          <Route path="/nosotros" element={
-            <>
-              <Encabezado theme={theme} setTheme={setTheme} />
-              <Nosotros />
-              <PieDePagina />
-            </>
-          } />
-          <Route path="/contacto" element={
-            <>
-              <Encabezado theme={theme} setTheme={setTheme} />
-              <Contacto />
-              <PieDePagina />
-            </>
-          } />
-          
-          <Route path="/login" element={
-            <>
-              <Encabezado theme={theme} setTheme={setTheme} />
-              <Login />
-              <PieDePagina />
-            </>
-          } />
-          <Route path="/forgot-password" element={
-            <>
-              <Encabezado theme={theme} setTheme={setTheme} />
-              <ForgotPassword />
-              <PieDePagina />
-            </>
-          } />
-          <Route path="/reset-password" element={
-            <>
-              <Encabezado theme={theme} setTheme={setTheme} />
-              <ResetPassword />
-              <PieDePagina />
-            </>
-          } />
+          <Route
+            path="/"
+            element={
+              <>
+                <Encabezado theme={theme} setTheme={setTheme} />
+                <PaginaInicio />
+                <PieDePagina />
+              </>
+            }
+          />
+          <Route
+            path="/productos"
+            element={
+              <>
+                <Encabezado theme={theme} setTheme={setTheme} />
+                <Productos />
+                <PieDePagina />
+              </>
+            }
+          />
+          <Route
+            path="/productos/:id"
+            element={
+              <>
+                <Encabezado theme={theme} setTheme={setTheme} />
+                <DetalleProducto />
+                <PieDePagina />
+              </>
+            }
+          />
+          <Route
+            path="/nosotros"
+            element={
+              <>
+                <Encabezado theme={theme} setTheme={setTheme} />
+                <Nosotros />
+                <PieDePagina />
+              </>
+            }
+          />
+          <Route
+            path="/contacto"
+            element={
+              <>
+                <Encabezado theme={theme} setTheme={setTheme} />
+                <Contacto />
+                <PieDePagina />
+              </>
+            }
+          />
+
+          <Route
+            path="/login"
+            element={
+              <>
+                <Encabezado theme={theme} setTheme={setTheme} />
+                <Login />
+                <PieDePagina />
+              </>
+            }
+          />
+          <Route
+            path="/forgot-password"
+            element={
+              <>
+                <Encabezado theme={theme} setTheme={setTheme} />
+                <ForgotPassword />
+                <PieDePagina />
+              </>
+            }
+          />
+          <Route
+            path="/reset-password"
+            element={
+              <>
+                <Encabezado theme={theme} setTheme={setTheme} />
+                <ResetPassword />
+                <PieDePagina />
+              </>
+            }
+          />
 
           <Route element={<RutaPrivada />}>
             <Route element={<AdminLayout />}>

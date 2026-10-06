@@ -1,8 +1,8 @@
-import api from './api';
+import api from "./api";
 
 export const categoriasService = {
   getAll: async () => {
-    const response = await api.get('/categorias');
+    const response = await api.get("/categorias");
     return response.data;
   },
 
@@ -12,7 +12,7 @@ export const categoriasService = {
   },
 
   create: async (categoriaData) => {
-    const response = await api.post('/categorias', categoriaData);
+    const response = await api.post("/categorias", categoriaData);
     return response.data;
   },
 
@@ -24,5 +24,5 @@ export const categoriasService = {
   delete: async (id) => {
     const response = await api.delete(`/categorias/${id}`);
     return response.data;
-  }
+  },
 };
