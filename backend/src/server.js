@@ -9,6 +9,7 @@ import { categoriasRoutes } from "./routes/categorias.routes.js";
 import { empresaRoutes } from "./routes/empresa.routes.js";
 import { usuariosRoutes } from "./routes/usuarios.routes.js";
 import { connectDB } from "./config/db.js";
+import multer from "multer";
 
 dotenv.config();
 
@@ -41,6 +42,15 @@ app.use("/productos", productosRoutes);
 app.use("/categorias", categoriasRoutes);
 app.use("/empresa", empresaRoutes);
 app.use("/usuarios", usuariosRoutes);
+
+// Manejador global de errores (captura MulterErrors, etc.)
+app.use((err, req, res, next) => {
+  console.error("Error global:", err);
+  if (err instanceof multer?.MulterError) {
+    return res.status(400).json({ message: `Error al subir archivo: ${err.message}` });
+  }
+  res.status(500).json({ message: err.message || "Error interno del servidor" });
+});
 
 const PORT = Number(process.env.PORT) || 3000;
 

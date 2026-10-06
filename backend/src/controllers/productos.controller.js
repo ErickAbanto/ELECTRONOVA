@@ -119,6 +119,14 @@ export const updateProducto = async (req, res) => {
 
     if (data.productoDestacado === "true") data.productoDestacado = true;
     if (data.productoDestacado === "false") data.productoDestacado = false;
+    
+    // Eliminar campos que no pertenecen al esquema
+    delete data.imagenesExistentes;
+    delete data.imagenes;
+    if (!data.idAdministrador || data.idAdministrador === "undefined") {
+      delete data.idAdministrador;
+    }
+
     const productoActualizado = await Producto.findByIdAndUpdate(
       req.params.id,
       data,

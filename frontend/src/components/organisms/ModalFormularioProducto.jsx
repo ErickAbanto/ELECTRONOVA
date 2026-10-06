@@ -102,7 +102,11 @@ const ModalFormularioProducto = ({
       );
       formData.append("caracteristicas", productoActual.caracteristicas);
       formData.append("productoDestacado", productoActual.productoDestacado);
-      formData.append("idAdministrador", admin?.id || admin?._id);
+      if (admin?.id || admin?._id) {
+        formData.append("idAdministrador", admin.id || admin._id);
+      } else if (productoActual.idAdministrador) {
+        formData.append("idAdministrador", productoActual.idAdministrador);
+      }
 
       if (productoActual.imagenes && productoActual.imagenes.length > 0) {
         productoActual.imagenes.forEach((img) => {
