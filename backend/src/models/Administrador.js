@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 const AdministradorSchema = new Schema({
   nombre: { type: String, required: true },
