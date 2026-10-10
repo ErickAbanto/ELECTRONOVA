@@ -66,7 +66,7 @@
 .hero-imagen-fondo {
   flex: 1;
   position: relative;
-  background-image: url("");
+  background-image: url('');
   /* Añade aquí la URL o ruta de tu imagen */
   background-size: cover;
   background-position: center;
@@ -78,18 +78,14 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(
-    90deg,
-    var(--primary-blue) 0%,
-    rgba(8, 45, 91, 0.3) 100%
-  );
+  background: linear-gradient(90deg, var(--primary-blue) 0%, rgba(8, 45, 91, 0.3) 100%);
 }
 
 .hero-slogan {
   position: absolute;
   bottom: 10%;
   right: 10%;
-  font-family: "Brush Script MT", cursive, sans-serif;
+  font-family: 'Brush Script MT', cursive, sans-serif;
   font-size: 3rem;
   color: var(--accent-yellow);
   transform: rotate(-10deg);
@@ -103,6 +99,7 @@
   max-width: 500px;
   z-index: 5;
   filter: drop-shadow(0px 10px 20px rgba(0, 0, 0, 0.5));
+
 }
 
 @keyframes float {

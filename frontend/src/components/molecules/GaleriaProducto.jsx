@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 
 const GaleriaProducto = ({ producto }) => {
   const [indiceActivo, setIndiceActivo] = useState(0);
@@ -10,9 +10,7 @@ const GaleriaProducto = ({ producto }) => {
 
   const getAbsUrl = (url) => {
     if (!url) return "https://via.placeholder.com/600";
-    return url.startsWith("http") || url.startsWith("data:image")
-      ? url
-      : `${import.meta.env.VITE_API_URL}${url}`;
+    return url.startsWith('http') || url.startsWith('data:image') ? url : `${import.meta.env.VITE_API_URL}${url}`;
   };
 
   return (
@@ -20,30 +18,30 @@ const GaleriaProducto = ({ producto }) => {
       <div className="imagen-principal-contenedor">
         {producto.imagenes && producto.imagenes.length > 0 ? (
           producto.imagenes.map((img, idx) => (
-            <img
+            <img 
               key={idx}
-              src={getAbsUrl(img.ubicacion)}
-              alt={`${producto.nombre} - ${idx + 1}`}
+              src={getAbsUrl(img.ubicacion)} 
+              alt={`${producto.nombre} - ${idx + 1}`} 
               className="imagen-principal-detalle"
-              style={{ display: idx === indiceActivo ? "block" : "none" }}
+              style={{ display: idx === indiceActivo ? 'block' : 'none' }}
             />
           ))
         ) : (
-          <img
-            src={getAbsUrl(producto.imagenPrincipal)}
-            alt={producto.nombre}
-            className="imagen-principal-detalle"
-            style={{ display: "block" }}
+          <img 
+            src={getAbsUrl(producto.imagenPrincipal)} 
+            alt={producto.nombre} 
+            className="imagen-principal-detalle" 
+            style={{ display: 'block' }} 
           />
         )}
       </div>
-
+      
       {producto.imagenes && producto.imagenes.length > 1 && (
         <div className="miniaturas-contenedor">
           {producto.imagenes.map((img, idx) => (
-            <div
-              key={idx}
-              className={`miniatura-item ${idx === indiceActivo ? "activa" : ""}`}
+            <div 
+              key={idx} 
+              className={`miniatura-item ${idx === indiceActivo ? 'activa' : ''}`}
               onClick={() => setIndiceActivo(idx)}
             >
               <img src={getAbsUrl(img.ubicacion)} alt={`Vista ${idx + 1}`} />
@@ -56,3 +54,4 @@ const GaleriaProducto = ({ producto }) => {
 };
 
 export default GaleriaProducto;
+

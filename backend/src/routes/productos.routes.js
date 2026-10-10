@@ -6,7 +6,7 @@ import {
   getProductoById,
   createProducto,
   updateProducto,
-  deleteProducto,
+  deleteProducto
 } from "../controllers/productos.controller.js";
 
 import { authMiddleware } from "../middlewares/auth.middleware.js";
@@ -18,18 +18,8 @@ productosRoutes.get("/", getProductos);
 productosRoutes.get("/buscar", searchProductos);
 productosRoutes.get("/filtrar", filterProductos);
 productosRoutes.get("/:id", getProductoById);
-productosRoutes.post(
-  "/",
-  authMiddleware,
-  uploadMiddleware.array("imagenes", 5),
-  createProducto,
-);
-productosRoutes.put(
-  "/:id",
-  authMiddleware,
-  uploadMiddleware.array("imagenes", 5),
-  updateProducto,
-);
+productosRoutes.post("/", authMiddleware, uploadMiddleware.array("imagenes", 5), createProducto);
+productosRoutes.put("/:id", authMiddleware, uploadMiddleware.array("imagenes", 5), updateProducto);
 productosRoutes.delete("/:id", authMiddleware, deleteProducto);
 
 export { productosRoutes };

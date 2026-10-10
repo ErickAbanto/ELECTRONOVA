@@ -1,10 +1,12 @@
-import { MapPin, Phone, Mail, Clock } from "lucide-react";
-import "./PieDePagina.css";
+
+import { MapPin, Phone, Mail, Clock } from 'lucide-react';
+import './PieDePagina.css';
 
 const PieDePagina = () => {
   return (
     <footer className="pie-pagina">
       <div className="pie-pagina-contenedor">
+
         <div className="pie-columna">
           <div className="pie-logo">
             <div className="logo-icono logo-icono-blanco">
@@ -12,14 +14,11 @@ const PieDePagina = () => {
             </div>
             <div className="logo-texto">
               <span className="logo-electronova-blanco">ELECTRONOVA</span>
-              <span className="logo-slogan-blanco">
-                Soluciones eléctricas para un mejor futuro
-              </span>
+              <span className="logo-slogan-blanco">Soluciones eléctricas para un mejor futuro</span>
             </div>
           </div>
           <p className="pie-descripcion">
-            Tu tienda de confianza en productos eléctricos. Calidad, variedad y
-            el mejor servicio para tus proyectos.
+            Tu tienda de confianza en productos eléctricos. Calidad, variedad y el mejor servicio para tus proyectos.
           </p>
           <div className="pie-redes">
             {/* Aquí irían los iconos de redes sociales */}
@@ -33,18 +32,10 @@ const PieDePagina = () => {
         <div className="pie-columna">
           <h4 className="pie-titulo">Enlaces rápidos</h4>
           <ul className="pie-enlaces">
-            <li>
-              <a href="/"> Inicio</a>
-            </li>
-            <li>
-              <a href="/productos"> Productos</a>
-            </li>
-            <li>
-              <a href="/nosotros"> Empresa</a>
-            </li>
-            <li>
-              <a href="/contacto"> Contacto</a>
-            </li>
+            <li><a href="/"> Inicio</a></li>
+            <li><a href="/productos"> Productos</a></li>
+            <li><a href="/nosotros"> Empresa</a></li>
+            <li><a href="/contacto"> Contacto</a></li>
           </ul>
         </div>
 
@@ -74,11 +65,10 @@ const PieDePagina = () => {
           <div className="pie-mapa-placeholder">
             <MapPin size={32} className="pie-mapa-icono" />
             <p>Visítanos en nuestra tienda</p>
-            <a href="#" className="pie-mapa-enlace">
-              Cómo llegar →
-            </a>
+            <a href="#" className="pie-mapa-enlace">Cómo llegar →</a>
           </div>
         </div>
+
       </div>
 
       <div className="pie-pagina-inferior">

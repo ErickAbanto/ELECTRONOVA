@@ -23,7 +23,7 @@ const seedDatabase = async () => {
     const admin = new Administrador({
       nombre: "Admin Principal",
       correo: "admin@electronova.com",
-      contraseña: "password123",
+      contraseña: "password123"
     });
     const savedAdmin = await admin.save();
 
@@ -32,41 +32,29 @@ const seedDatabase = async () => {
       descripcion: "Catálogo virtual de productos eléctricos",
       direccion: "Av. Principal 123, Lima",
       horarioAtencion: "Lunes a Viernes de 9am a 6pm",
-      contacto: "+51 987654321",
-      idAdministrador: savedAdmin._id,
+      contacto: "+51 987654321"
     });
     await empresa.save();
 
     const categoria = new Categoria({
       nombre: "Cables Eléctricos",
       descripcion: "Todo tipo de cables para instalaciones",
-      idAdministrador: savedAdmin._id,
+      idAdministrador: savedAdmin._id
     });
     const savedCategoria = await categoria.save();
 
-    const categoria2 = new Categoria({
-      nombre: "Iluminación",
-      descripcion: "Focos, paneles y luminarias",
+    const producto = new Producto({
+      nombre: "Cable THW 12 AWG",
+      productoDestacado: true,
+      especificacionesTec: "Cable de cobre, 600V, resistente al calor y humedad.",
+      idCategoria: savedCategoria._id,
       idAdministrador: savedAdmin._id,
+      precio: 120.50,
+      caracteristicas: "Rollo de 100 metros. Color Rojo.",
+      descripcionCorta: "Cable ideal para instalaciones domésticas",
+      descripcionCompleta: "El cable THW es un conductor de cobre suave o recocido..."
     });
-    const savedCategoria2 = await categoria2.save();
-
-    const productosParaInsertar = [];
-    for (let i = 1; i <= 25; i++) {
-      productosParaInsertar.push({
-        nombre: `Producto de Prueba ${i} ${i % 2 === 0 ? "Cable" : "Foco"}`,
-        productoDestacado: i % 5 === 0,
-        especificacionesTec: `Especificaciones técnicas genéricas para el producto ${i}, 600V, resistente.`,
-        idCategoria: i % 2 === 0 ? savedCategoria._id : savedCategoria2._id,
-        idAdministrador: savedAdmin._id,
-        precio: (Math.random() * 100 + 10).toFixed(2),
-        caracteristicas: `Característica ${i} - Color ${i % 2 === 0 ? 'Rojo' : 'Blanco'}.`,
-        descripcionCorta: `Descripción corta ideal para el producto ${i}`,
-        descripcionCompleta: `Descripción muy completa y detallada del producto de prueba número ${i}. Ideal para instalaciones y proyectos eléctricos comerciales y domésticos.`,
-      });
-    }
-
-    await Producto.insertMany(productosParaInsertar);
+    await producto.save();
 
     console.log("¡Base de datos inicializada con éxito!");
     process.exit(0);

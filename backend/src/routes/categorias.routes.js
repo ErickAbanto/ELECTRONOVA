@@ -4,7 +4,7 @@ import {
   getCategoriaById,
   createCategoria,
   updateCategoria,
-  deleteCategoria,
+  deleteCategoria
 } from "../controllers/categorias.controller.js";
 
 import { authMiddleware } from "../middlewares/auth.middleware.js";

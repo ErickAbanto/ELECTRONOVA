@@ -1,4 +1,5 @@
-import { Edit2, Trash2 } from "lucide-react";
+
+import { Edit2, Trash2 } from 'lucide-react';
 
 const TablaCategoriasAdmin = ({ categorias, onEdit, onDelete }) => {
   return (
@@ -16,25 +17,13 @@ const TablaCategoriasAdmin = ({ categorias, onEdit, onDelete }) => {
             categorias.map((cat) => (
               <tr key={cat._id}>
                 <td className="fw-bold">{cat.nombre}</td>
-                <td>
-                  {cat.descripcion || (
-                    <span className="text-muted">Sin descripción</span>
-                  )}
-                </td>
+                <td>{cat.descripcion || <span className="text-muted">Sin descripción</span>}</td>
                 <td>
                   <div className="acciones-celda">
-                    <button
-                      className="btn-accion btn-editar"
-                      onClick={() => onEdit(cat)}
-                      title="Editar"
-                    >
+                    <button className="btn-accion btn-editar" onClick={() => onEdit(cat)} title="Editar">
                       <Edit2 size={18} />
                     </button>
-                    <button
-                      className="btn-accion btn-eliminar"
-                      onClick={() => onDelete(cat._id)}
-                      title="Eliminar"
-                    >
+                    <button className="btn-accion btn-eliminar" onClick={() => onDelete(cat._id)} title="Eliminar">
                       <Trash2 size={18} />
                     </button>
                   </div>
@@ -43,9 +32,7 @@ const TablaCategoriasAdmin = ({ categorias, onEdit, onDelete }) => {
             ))
           ) : (
             <tr>
-              <td colSpan="3" className="texto-centrado">
-                No se encontraron categorías.
-              </td>
+              <td colSpan="3" className="texto-centrado">No se encontraron categorías.</td>
             </tr>
           )}
         </tbody>

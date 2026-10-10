@@ -1,23 +1,19 @@
-import { useState, useEffect } from "react";
-import { categoriasService } from "../../services/categorias.service";
-import { Plus, Search } from "lucide-react";
-import "./AdminCategorias.css";
-import TablaCategoriasAdmin from "../organisms/TablaCategoriasAdmin";
-import ModalFormularioCategoria from "../organisms/ModalFormularioCategoria";
+import { useState, useEffect } from 'react';
+import { categoriasService } from '../../services/categorias.service';
+import { Plus, Search } from 'lucide-react';
+import './AdminCategorias.css';
+import TablaCategoriasAdmin from '../organisms/TablaCategoriasAdmin';
+import ModalFormularioCategoria from '../organisms/ModalFormularioCategoria';
 
 function AdminCategorias() {
   const [categorias, setCategorias] = useState([]);
-  const [busqueda, setBusqueda] = useState("");
+  const [busqueda, setBusqueda] = useState('');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
+  const [error, setError] = useState('');
+  
   const [modalAbierto, setModalAbierto] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
-  const [categoriaActual, setCategoriaActual] = useState({
-    _id: "",
-    nombre: "",
-    descripcion: "",
-  });
+  const [categoriaActual, setCategoriaActual] = useState({ _id: '', nombre: '', descripcion: '' });
 
   useEffect(() => {
     cargarCategorias();
@@ -29,7 +25,7 @@ function AdminCategorias() {
       const data = await categoriasService.getAll();
       setCategorias(data);
     } catch (err) {
-      setError("Error al cargar las categorías");
+      setError('Error al cargar las categorías');
       console.error(err);
     } finally {
       setLoading(false);
@@ -38,7 +34,7 @@ function AdminCategorias() {
 
   const abrirModalNuevo = () => {
     setModoEdicion(false);
-    setCategoriaActual({ _id: "", nombre: "", descripcion: "" });
+    setCategoriaActual({ _id: '', nombre: '', descripcion: '' });
     setModalAbierto(true);
   };
 
@@ -49,29 +45,21 @@ function AdminCategorias() {
   };
 
   const handleEliminar = async (id) => {
-    if (
-      window.confirm(
-        "¿Estás seguro de que deseas eliminar esta categoría? Esta acción no se puede deshacer.",
-      )
-    ) {
+    if (window.confirm('¿Estás seguro de que deseas eliminar esta categoría? Esta acción no se puede deshacer.')) {
       try {
         await categoriasService.delete(id);
         cargarCategorias();
       } catch (err) {
-        alert(
-          err.response?.data?.message ||
-            "Error al eliminar la categoría. Asegúrate de que no tenga productos asociados.",
-        );
+        alert(err.response?.data?.message || 'Error al eliminar la categoría. Asegúrate de que no tenga productos asociados.');
       }
     }
   };
 
-  const categoriasFiltradas = categorias.filter((cat) =>
-    cat.nombre.toLowerCase().includes(busqueda.toLowerCase()),
+  const categoriasFiltradas = categorias.filter(cat => 
+    cat.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
 
-  if (loading && categorias.length === 0)
-    return <div className="cargando-admin">Cargando categorías...</div>;
+  if (loading && categorias.length === 0) return <div className="cargando-admin">Cargando categorías...</div>;
 
   return (
     <div className="admin-modulo">
@@ -88,9 +76,9 @@ function AdminCategorias() {
       <div className="admin-controles">
         <div className="admin-buscador">
           <Search size={18} className="icono-buscar" />
-          <input
-            type="text"
-            placeholder="Buscar por nombre..."
+          <input 
+            type="text" 
+            placeholder="Buscar por nombre..." 
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
           />
@@ -100,15 +88,15 @@ function AdminCategorias() {
       {error ? (
         <div className="error-mensaje">{error}</div>
       ) : (
-        <TablaCategoriasAdmin
-          categorias={categoriasFiltradas}
-          onEdit={abrirModalEditar}
-          onDelete={handleEliminar}
+        <TablaCategoriasAdmin 
+          categorias={categoriasFiltradas} 
+          onEdit={abrirModalEditar} 
+          onDelete={handleEliminar} 
         />
       )}
 
       {modalAbierto && (
-        <ModalFormularioCategoria
+        <ModalFormularioCategoria 
           modoEdicion={modoEdicion}
           categoriaInicial={categoriaActual}
           onClose={() => setModalAbierto(false)}

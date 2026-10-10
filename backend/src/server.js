@@ -9,7 +9,6 @@ import { categoriasRoutes } from "./routes/categorias.routes.js";
 import { empresaRoutes } from "./routes/empresa.routes.js";
 import { usuariosRoutes } from "./routes/usuarios.routes.js";
 import { connectDB } from "./config/db.js";
-import multer from "multer";
 
 dotenv.config();
 
@@ -20,13 +19,10 @@ const app = express();
 
 connectDB();
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
 
-const allowedOrigin =
-  process.env.ALLOWED_ORIGIN ||
-  process.env.FRONTEND_URL ||
-  "http://localhost:5173";
+const allowedOrigin = process.env.ALLOWED_ORIGIN || process.env.FRONTEND_URL || "http://localhost:5173";
 app.use(
   cors({
     origin: allowedOrigin,
@@ -42,15 +38,6 @@ app.use("/productos", productosRoutes);
 app.use("/categorias", categoriasRoutes);
 app.use("/empresa", empresaRoutes);
 app.use("/usuarios", usuariosRoutes);
-
-// Manejador global de errores (captura MulterErrors, etc.)
-app.use((err, req, res, next) => {
-  console.error("Error global:", err);
-  if (err instanceof multer?.MulterError) {
-    return res.status(400).json({ message: `Error al subir archivo: ${err.message}` });
-  }
-  res.status(500).json({ message: err.message || "Error interno del servidor" });
-});
 
 const PORT = Number(process.env.PORT) || 3000;
 

@@ -1,9 +1,11 @@
-import "./ModalProductoDetalle.css";
 
-import BotonCerrarModal from "../atoms/BotonCerrarModal";
-import PrecioProducto from "../atoms/PrecioProducto";
-import GaleriaProducto from "../molecules/GaleriaProducto";
-import SeccionDetalleProducto from "../molecules/SeccionDetalleProducto";
+import './ModalProductoDetalle.css';
+
+
+import BotonCerrarModal from '../atoms/BotonCerrarModal';
+import PrecioProducto from '../atoms/PrecioProducto';
+import GaleriaProducto from '../molecules/GaleriaProducto';
+import SeccionDetalleProducto from '../molecules/SeccionDetalleProducto';
 
 export default function ModalProductoDetalle({ producto, onClose }) {
   if (!producto) return null;
@@ -22,26 +24,14 @@ export default function ModalProductoDetalle({ producto, onClose }) {
           <GaleriaProducto producto={producto} />
 
           <div className="detalle-info">
-            <span className="detalle-categoria">
-              {producto.idCategoria?.nombre || "Categoría no especificada"}
-            </span>
+            <span className="detalle-categoria">{producto.idCategoria?.nombre || 'Categoría no especificada'}</span>
             <h2 className="detalle-titulo">{producto.nombre}</h2>
 
-            <div
-              className="detalle-precio-estado"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                marginBottom: "1.5rem",
-              }}
-            >
+            <div className="detalle-precio-estado" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
               <PrecioProducto precio={producto.precio} />
             </div>
 
-            <p className="detalle-descripcion-corta">
-              {producto.descripcionCorta}
-            </p>
+            <p className="detalle-descripcion-corta">{producto.descripcionCorta}</p>
 
             <hr className="detalle-separador" />
 

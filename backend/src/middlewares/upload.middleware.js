@@ -12,11 +12,11 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-export const uploadMiddleware = multer({
+export const uploadMiddleware = multer({ 
   storage: storage,
   fileFilter: fileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024, // Límite de 5MB por archivo
-    fieldSize: 25 * 1024 * 1024, // Límite de 25MB para campos de texto (para soportar base64 largos)
-  },
+    fieldSize: 25 * 1024 * 1024 // Límite de 25MB para campos de texto (para soportar base64 largos)
+  }
 });

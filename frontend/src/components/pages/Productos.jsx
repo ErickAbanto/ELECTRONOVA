@@ -1,119 +1,113 @@
-import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import { Search, Filter, SlidersHorizontal } from "lucide-react";
-import TarjetaProducto from "../molecules/TarjetaProducto";
-import ModalProductoDetalle from "../organisms/ModalProductoDetalle";
-import { productosService } from "../../services/productos.service";
-import { categoriasService } from "../../services/categorias.service";
-import "./Productos.css";
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { Search, Filter, SlidersHorizontal } from 'lucide-react';
+import TarjetaProducto from '../molecules/TarjetaProducto';
+import ModalProductoDetalle from '../organisms/ModalProductoDetalle';
+import { productosService } from '../../services/productos.service';
+import { categoriasService } from '../../services/categorias.service';
+import './Productos.css';
 
 function Productos() {
   const [productos, setProductos] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("");
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('');
   const [error, setError] = useState(null);
   const [productoSeleccionado, setProductoSeleccionado] = useState(null);
   const [filtrosMobileAbiertos, setFiltrosMobileAbiertos] = useState(false);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    totalPages: 1,
-    limit: 9,
-  });
   const location = useLocation();
 
   const [busqueda, setBusqueda] = useState(() => {
-    const q = new URLSearchParams(location.search).get("q");
-    return q || "";
+    const q = new URLSearchParams(location.search).get('q');
+    return q || '';
   });
 
-  const cargarDatos = async (page = 1) => {
+  const cargarDatos = async () => {
     try {
       setLoading(true);
       const [prodsData, catsData] = await Promise.all([
-        productosService.getAll(page, pagination.limit),
-        categoriasService.getAll(), // Note: categorias doesn't have pagination yet
+        productosService.getAll(),
+        categoriasService.getAll()
       ]);
-      setProductos(prodsData.data || prodsData);
-      if (prodsData.pagination) setPagination(prodsData.pagination);
-
-      // Handle array returned for cats if pagination is not there
-      setCategorias(catsData.data || catsData);
+      setProductos(prodsData);
+      setCategorias(catsData);
     } catch (error) {
       console.error("Error cargando datos:", error);
-      setError("No se pudieron cargar los productos.");
+      setError("No se pudieron cargar los productos. Asegúrate de que el backend esté encendido y conectado.");
     } finally {
       setLoading(false);
     }
   };
 
+  // Sincronizar busqueda desde URL al inicializar o cambiar URL
   useEffect(() => {
-    const q = new URLSearchParams(location.search).get("q");
+    const q = new URLSearchParams(location.search).get('q');
     if (q && q !== busqueda) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setBusqueda(q);
-    } else if (!q && busqueda === "") {
-      cargarDatos(1);
+    } else if (!q) {
+      cargarDatos();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search]);
 
+  // Efecto para la búsqueda en vivo (debounce)
   useEffect(() => {
     const timer = setTimeout(async () => {
-      if (!loading && busqueda !== "") {
-        realizarBusqueda(busqueda, 1);
-      } else if (busqueda === "") {
-        // Only load if it was a clear action
-        if (categoriaSeleccionada) {
-          handleFiltrarCategoria(categoriaSeleccionada, 1);
+      try {
+        setLoading(true);
+        if (busqueda.trim() === '') {
+          // Si está vacío, volvemos a cargar todo (filtrado o no)
+          if (categoriaSeleccionada) {
+            const resultados = await productosService.filter({ categoria: categoriaSeleccionada });
+            setProductos(resultados);
+          } else {
+            cargarDatos();
+          }
+          return;
         }
+        const resultados = await productosService.search({ q: busqueda });
+        setProductos(resultados);
+      } catch (error) {
+        console.error("Error en la búsqueda:", error);
+        setError("Error en la búsqueda en vivo.");
+      } finally {
+        setLoading(false);
       }
-    }, 500);
+    }, 300);
+
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [busqueda]);
 
-  const realizarBusqueda = async (term, page = 1) => {
+  const handleBuscar = async (e) => {
+    e.preventDefault();
     try {
       setLoading(true);
-      const resultados = await productosService.search(
-        { q: term },
-        page,
-        pagination.limit,
-      );
-      setProductos(resultados.data || resultados);
-      if (resultados.pagination) setPagination(resultados.pagination);
+      if (busqueda.trim() === '') {
+        cargarDatos();
+        return;
+      }
+      const resultados = await productosService.search({ q: busqueda });
+      setProductos(resultados);
     } catch (error) {
-      console.error("Error en la búsqueda:", error);
+      console.error("Error al buscar:", error);
       setError("Error en la búsqueda.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBuscar = (e) => {
-    e.preventDefault();
-    if (busqueda.trim() === "") {
-      cargarDatos(1);
-    } else {
-      realizarBusqueda(busqueda, 1);
-    }
-  };
-
-  const handleFiltrarCategoria = async (catId, page = 1) => {
+  const handleFiltrarCategoria = async (catId) => {
     setCategoriaSeleccionada(catId);
-    setBusqueda(""); // clear search when filtering by category
     try {
       setLoading(true);
-      if (catId === "") {
-        cargarDatos(page);
+      if (catId === '') {
+        cargarDatos();
         return;
       }
-      const resultados = await productosService.filter(
-        { categoria: catId },
-        page,
-        pagination.limit,
-      );
-      setProductos(resultados.data || resultados);
-      if (resultados.pagination) setPagination(resultados.pagination);
+      const resultados = await productosService.filter({ categoria: catId });
+      setProductos(resultados);
     } catch (error) {
       console.error("Error al filtrar:", error);
       setError("Error filtrando por categoría.");
@@ -122,24 +116,10 @@ function Productos() {
     }
   };
 
-  const handlePageChange = (newPage) => {
-    if (newPage >= 1 && newPage <= pagination.totalPages) {
-      if (busqueda) {
-        realizarBusqueda(busqueda, newPage);
-      } else if (categoriaSeleccionada) {
-        handleFiltrarCategoria(categoriaSeleccionada, newPage);
-      } else {
-        cargarDatos(newPage);
-      }
-    }
-  };
-
   const getImagenUrl = (prod) => {
     if (prod.imagenes && prod.imagenes.length > 0) {
       const url = prod.imagenes[0].ubicacion;
-      return url.startsWith("http") || url.startsWith("data:image")
-        ? url
-        : `${import.meta.env.VITE_API_URL}${url}`;
+      return url.startsWith('http') || url.startsWith('data:image') ? url : `${import.meta.env.VITE_API_URL}${url}`;
     }
     return prod.imagenPrincipal || "https://via.placeholder.com/300";
   };
@@ -152,34 +132,24 @@ function Productos() {
       </div>
 
       <div className="productos-contenedor">
-        <aside
-          className={`filtros-sidebar ${filtrosMobileAbiertos ? "abierto" : ""}`}
-        >
+        <aside className={`filtros-sidebar ${filtrosMobileAbiertos ? 'abierto' : ''}`}>
           <div className="filtro-caja">
-            <h3>
-              <Filter size={18} /> Filtrar por
-            </h3>
+            <h3><Filter size={18} /> Filtrar por</h3>
 
             <div className="filtro-grupo">
               <h4>Categorías</h4>
               <ul className="lista-categorias">
                 <li
-                  className={categoriaSeleccionada === "" ? "activo" : ""}
-                  onClick={() => handleFiltrarCategoria("")}
+                  className={categoriaSeleccionada === '' ? 'activo' : ''}
+                  onClick={() => handleFiltrarCategoria('')}
                 >
                   Todas
                 </li>
-                {categorias.map((cat) => (
+                {categorias.map(cat => (
                   <li
                     key={cat._id || cat.idCategoria}
-                    className={
-                      categoriaSeleccionada === (cat._id || cat.idCategoria)
-                        ? "activo"
-                        : ""
-                    }
-                    onClick={() =>
-                      handleFiltrarCategoria(cat._id || cat.idCategoria)
-                    }
+                    className={categoriaSeleccionada === (cat._id || cat.idCategoria) ? 'activo' : ''}
+                    onClick={() => handleFiltrarCategoria(cat._id || cat.idCategoria)}
                   >
                     {cat.nombre}
                   </li>
@@ -190,6 +160,7 @@ function Productos() {
         </aside>
 
         <div className="productos-principal">
+
           <div className="productos-controles">
             <form onSubmit={handleBuscar} className="busqueda-form">
               <Search size={18} className="icono-busqueda" />
@@ -202,11 +173,7 @@ function Productos() {
               <button type="submit">Buscar</button>
             </form>
             <div className="controles-derecha">
-              <button
-                type="button"
-                className="btn-mobile-filtros"
-                onClick={() => setFiltrosMobileAbiertos(!filtrosMobileAbiertos)}
-              >
+              <button type="button" className="btn-mobile-filtros" onClick={() => setFiltrosMobileAbiertos(!filtrosMobileAbiertos)}>
                 <SlidersHorizontal size={20} /> Filtros
               </button>
             </div>
@@ -219,7 +186,7 @@ function Productos() {
           ) : (
             <div className="cuadricula-catalogo">
               {productos.length > 0 ? (
-                productos.map((prod) => (
+                productos.map(prod => (
                   <TarjetaProducto
                     key={prod._id || prod.idProducto}
                     id={prod._id || prod.idProducto}
@@ -229,12 +196,12 @@ function Productos() {
                     estado={prod.estado}
                     onClick={async () => {
                       try {
-                        const prodCompleto = await productosService.getById(
-                          prod._id || prod.idProducto,
-                        );
+                        // Muestra un estado de carga si es necesario, pero esto es suficientemente rápido
+                        const prodCompleto = await productosService.getById(prod._id || prod.idProducto);
                         setProductoSeleccionado(prodCompleto);
                       } catch (err) {
-                        setProductoSeleccionado(prod);
+                        console.error('Error fetching full product', err);
+                        setProductoSeleccionado(prod); // usa el básico en caso de error
                       }
                     }}
                   />
@@ -245,28 +212,6 @@ function Productos() {
                   <p>Intenta con otros términos de búsqueda o filtros.</p>
                 </div>
               )}
-            </div>
-          )}
-
-          {!loading && pagination && pagination.totalPages > 1 && (
-            <div className="paginacion-controles">
-              <button
-                disabled={pagination.page <= 1}
-                onClick={() => handlePageChange(pagination.page - 1)}
-                className="btn-paginacion"
-              >
-                &laquo; Anterior
-              </button>
-              <span className="info-paginacion">
-                Página {pagination.page} de {pagination.totalPages}
-              </span>
-              <button
-                disabled={pagination.page >= pagination.totalPages}
-                onClick={() => handlePageChange(pagination.page + 1)}
-                className="btn-paginacion"
-              >
-                Siguiente &raquo;
-              </button>
             </div>
           )}
         </div>
@@ -281,3 +226,5 @@ function Productos() {
 }
 
 export { Productos };
+
+

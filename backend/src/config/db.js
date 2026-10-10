@@ -3,8 +3,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const dbURI =
-  process.env.MONGODB_URI || "mongodb://localhost:27017/electronova";
+const dbURI = process.env.MONGODB_URI || "mongodb://localhost:27017/electronova";
 
 export const connectDB = async () => {
   try {
