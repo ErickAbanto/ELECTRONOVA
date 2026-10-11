@@ -1,19 +1,95 @@
+const SeccionDetalleProducto = ({
+  titulo,
+  contenido,
+  preformateado = false,
+  conScroll = false
+}) => {
 
-const SeccionDetalleProducto = ({ titulo, contenido, preformateado = false, conScroll = false }) => {
-  if (!contenido) return null;
+
+  if (!contenido || contenido.trim() === '') {
+
+    return null;
+
+  }
+
+
+
+
 
   return (
-    <div className="detalle-seccion">
-      <h3>{titulo}</h3>
-      <div className={conScroll ? "descripcion-con-scroll" : ""}>
-        {preformateado ? (
-          <p className="texto-preformateado">{contenido}</p>
-        ) : (
-          <p>{contenido}</p>
-        )}
+
+    <section className="detalle-seccion">
+
+
+
+      <h3>
+
+        {titulo}
+
+      </h3>
+
+
+
+
+
+      <div
+
+        className={
+          conScroll
+          ?
+          "descripcion-con-scroll"
+          :
+          ""
+        }
+
+      >
+
+
+
+
+
+        {
+          preformateado ? (
+
+
+            <div className="texto-preformateado">
+
+              {contenido}
+
+            </div>
+
+
+
+          ) : (
+
+
+            <p>
+
+              {contenido}
+
+            </p>
+
+
+
+          )
+
+        }
+
+
+
+
       </div>
-    </div>
+
+
+
+
+
+    </section>
+
+
   );
+
 };
+
 
 export default SeccionDetalleProducto;

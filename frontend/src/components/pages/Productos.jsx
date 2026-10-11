@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Search, Filter, SlidersHorizontal } from 'lucide-react';
+import { Search, Filter, SlidersHorizontal, X } from 'lucide-react';
 import TarjetaProducto from '../molecules/TarjetaProducto';
 import ModalProductoDetalle from '../organisms/ModalProductoDetalle';
 import Paginacion from '../molecules/Paginacion';
@@ -16,8 +16,8 @@ function Productos() {
   const [error, setError] = useState(null);
   const [productoSeleccionado, setProductoSeleccionado] = useState(null);
   const [filtrosMobileAbiertos, setFiltrosMobileAbiertos] = useState(false);
-  
-  // Estado de paginación
+
+  // Estados de paginación
   const [paginaActual, setPaginaActual] = useState(1);
   const [paginacionInfo, setPaginacionInfo] = useState(null);
   const limitePorPagina = 12;
@@ -103,6 +103,7 @@ function Productos() {
 
   const handleFiltrarCategoria = (catId) => {
     setCategoriaSeleccionada(catId);
+    setFiltrosMobileAbiertos(false);
     setPaginaActual(1);
     cargarProductos(1, catId, busqueda);
   };
@@ -128,12 +129,24 @@ function Productos() {
         <p>Encuentra todo lo que necesitas para tus proyectos eléctricos</p>
       </div>
 
-      <div className="productos-contenedor">
-        <aside className={`filtros-sidebar ${filtrosMobileAbiertos ? 'abierto' : ''}`}>
+      <div className="productos-layout">
+        <aside className={`filtros-sidebar ${filtrosMobileAbiertos ? 'mostrar' : ''}`}>
           <div className="filtro-caja">
-            <h3><Filter size={18} /> Filtrar por</h3>
+            <div className="filtro-titulo">
+              <h3>
+                <Filter size={18} /> Filtrar por
+              </h3>
+              <button
+                type="button"
+                className="cerrar-filtro"
+                onClick={() => setFiltrosMobileAbiertos(false)}
+                title="Cerrar filtros"
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-            <div className="filtro-grupo">
+            <div className="grupo-categorias">
               <h4>Categorías</h4>
               <ul className="lista-categorias">
                 <li
@@ -142,7 +155,7 @@ function Productos() {
                 >
                   Todas las categorías
                 </li>
-                {categorias.map(cat => (
+                {categorias.map((cat) => (
                   <li
                     key={cat._id || cat.idCategoria}
                     className={categoriaSeleccionada === (cat._id || cat.idCategoria) ? 'activo' : ''}
@@ -156,8 +169,8 @@ function Productos() {
           </div>
         </aside>
 
-        <div className="productos-principal">
-          <div className="productos-controles">
+        <div className="productos-contenido">
+          <div className="barra-productos">
             <form onSubmit={handleBuscar} className="busqueda-form">
               <Search size={18} className="icono-busqueda" />
               <input
@@ -168,11 +181,14 @@ function Productos() {
               />
               <button type="submit">Buscar</button>
             </form>
-            <div className="controles-derecha">
-              <button type="button" className="btn-mobile-filtros" onClick={() => setFiltrosMobileAbiertos(!filtrosMobileAbiertos)}>
-                <SlidersHorizontal size={20} /> Filtros
-              </button>
-            </div>
+
+            <button
+              type="button"
+              className="btn-filtro-mobile"
+              onClick={() => setFiltrosMobileAbiertos(true)}
+            >
+              <SlidersHorizontal size={20} /> Filtros
+            </button>
           </div>
 
           {error && <div className="mensaje-error">{error}</div>}
@@ -181,9 +197,9 @@ function Productos() {
             <div className="cargando">Cargando productos...</div>
           ) : (
             <>
-              <div className="cuadricula-catalogo">
+              <div className="grid-productos">
                 {productos.length > 0 ? (
-                  productos.map(prod => (
+                  productos.map((prod) => (
                     <TarjetaProducto
                       key={prod._id || prod.idProducto}
                       id={prod._id || prod.idProducto}

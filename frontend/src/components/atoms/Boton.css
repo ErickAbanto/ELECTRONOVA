@@ -1,37 +1,198 @@
+/* ==========================
+   BOTONES GENERALES
+========================== */
+
+
 .boton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1.2rem;
-  border-radius: var(--border-radius);
-  font-weight: 500;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: none;
-  font-family: inherit;
+
+  display:inline-flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  gap:8px;
+
+  padding:12px 22px;
+
+  border-radius:10px;
+
+  font-family:inherit;
+
+  font-size:.95rem;
+
+  font-weight:700;
+
+  cursor:pointer;
+
+  border:none;
+
+  transition:
+  transform .25s ease,
+  background-color .25s ease,
+  box-shadow .25s ease;
+
+  user-select:none;
+
 }
+
+
+
+
+
+.boton:hover {
+
+  transform:translateY(-2px);
+
+}
+
+
+
+
+
+.boton:active {
+
+  transform:scale(.97);
+
+}
+
+
+
+
+
+
+
+/* ==========================
+   BOTON PRIMARIO
+========================== */
+
 
 .boton-primario {
-  background-color: var(--primary-blue);
-  color: var(--bg-white);
+
+
+  background:
+  var(--primary-blue);
+
+
+  color:white;
+
+
+  box-shadow:
+  0 5px 15px rgba(8,45,91,.18);
+
+
 }
+
+
 
 .boton-primario:hover {
-  background-color: var(--secondary-blue);
+
+
+  background:
+  var(--secondary-blue);
+
+
 }
+
+
+
+
+
+
+
+
+
+/* ==========================
+   BOTON SECUNDARIO
+========================== */
+
 
 .boton-secundario {
-  background-color: var(--accent-yellow);
-  color: var(--primary-blue);
-  font-weight: 600;
+
+
+  background:
+  var(--accent-yellow);
+
+
+  color:
+  var(--primary-blue);
+
+
+  font-weight:800;
+
+
 }
+
+
+
+
 
 .boton-secundario:hover {
-  background-color: var(--accent-yellow-hover);
+
+
+  background:
+  var(--accent-yellow-hover);
+
+
 }
 
+
+
+
+
+
+
+
+
+/* ==========================
+   BOTON ICONO
+========================== */
+
+
 .boton-icono {
-  display: flex;
+
+
+  display:flex;
+
+
+  align-items:center;
+
+
+  justify-content:center;
+
+
+  padding:10px;
+
+
+}
+
+
+
+
+
+
+
+
+
+/* ==========================
+   RESPONSIVE
+========================== */
+
+
+@media(max-width:768px){
+
+
+.boton {
+
+
+  width:100%;
+
+
+  padding:11px 18px;
+
+
+}
+
+
+
 }
