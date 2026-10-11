@@ -1,11 +1,15 @@
-import { Empresa } from "../models/Empresa.js";
+import { empresaService } from "../services/empresa.service.js";
 
-export const getEmpresa = async (req, res) => {
+const getEmpresa = async (req, res, next) => {
   try {
-    const empresa = await Empresa.findOne();
-    if (!empresa) return res.status(404).json({ message: "Datos de empresa no encontrados" });
-    res.status(200).json(empresa);
+    const empresa = await empresaService.obtenerDatos();
+    if (!empresa) {
+      return res.status(404).json({ message: "Datos de empresa no encontrados" });
+    }
+    return res.status(200).json(empresa);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
+
+export { getEmpresa };

@@ -1,166 +1,139 @@
-import { Producto } from "../models/Producto.js";
-import { Imagen } from "../models/Imagen.js";
-import sharp from "sharp";
+import { productosService } from "../services/productos.service.js";
 
-export const getProductos = async (req, res) => {
-  try {
-    const productos = await Producto.find().populate("idCategoria").populate({ path: "imagenes", perDocumentLimit: 1 });
-    res.status(200).json(productos);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+const productosController = {
+  getProductos: (req, res) => {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 12;
 
-export const getProductoById = async (req, res) => {
-  try {
-    const producto = await Producto.findById(req.params.id).populate("idCategoria").populate("imagenes");
-    if (!producto) return res.status(404).json({ message: "Producto no encontrado" });
-    res.status(200).json(producto);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+    productosService
+      .getProductos(page, limit)
+      .then((response) =>
+        res.status(200).json({
+          message: "Productos Obtenidos",
+          data: response.productos,
+          pagination: response.pagination,
+        })
+      )
+      .catch((error) => res.status(500).json({ message: error.message }));
+  },
 
-export const createProducto = async (req, res) => {
-  try {
-    const data = { ...req.body };
-    
-    if (req.files && req.files.length > 5) {
-      return res.status(400).json({ message: "No se pueden subir más de 5 imágenes por producto." });
-    }
-
-    const nuevoProducto = new Producto(data);
-    const productoGuardado = await nuevoProducto.save();
-
-    if (req.files && req.files.length > 0) {
-      const imagenesPromises = req.files.map(async file => {
-        const compressedBuffer = await sharp(file.buffer)
-          .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
-          .jpeg({ quality: 80 })
-          .toBuffer();
-          
-        const base64Data = compressedBuffer.toString('base64');
-        const ubicacion = `data:image/jpeg;base64,${base64Data}`;
-        const nuevaImagen = new Imagen({
-          idProducto: productoGuardado._id,
-          tipo: 'image/jpeg',
-          ubicacion: ubicacion
-        });
-        return nuevaImagen.save();
+  getProductoById: (req, res) => {
+    const id = req.params.id;
+    productosService
+      .getProductoById(id)
+      .then((producto) =>
+        res.status(200).json({
+          message: "Producto encontrado",
+          data: producto,
+        })
+      )
+      .catch((error) => {
+        if (error.message === "Producto no encontrado") {
+          return res.status(404).json({ message: error.message });
+        }
+        res.status(500).json({ message: error.message });
       });
-      await Promise.all(imagenesPromises);
-    }
-    
-    const productoFinal = await Producto.findById(productoGuardado._id).populate("imagenes");
-    res.status(201).json(productoFinal);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
+  },
 
-export const updateProducto = async (req, res) => {
-  try {
-    const data = { ...req.body };
-    // 1. Recibir las imágenes que ya existían y que el usuario NO borró
-    let urlsExistentes = [];
-    if (req.body.imagenesExistentes) {
-      try {
-        const parseadas = JSON.parse(req.body.imagenesExistentes);
-        urlsExistentes = parseadas.map(u => {
-          const match = u.match(/(\/uploads\/.*)/);
-          return match ? match[1] : u;
-        });
-      } catch (e) {
-        console.error("Error al parsear imagenesExistentes", e);
-      }
-    }
+  createProducto: (req, res) => {
+    productosService
+      .crearProducto(req.body, req.files)
+      .then((nuevoProducto) =>
+        res.status(201).json({
+          message: "Producto creado con éxito",
+          data: nuevoProducto,
+        })
+      )
+      .catch((err) =>
+        res.status(500).json({ message: "Error al crear producto", error: err.message })
+      );
+  },
 
-    const totalImages = urlsExistentes.length + (req.files ? req.files.length : 0);
-    if (totalImages > 5) {
-      return res.status(400).json({ message: "No se pueden tener más de 5 imágenes en total por producto." });
-    }
+  updateProducto: (req, res) => {
+    const id = req.params.id;
+    productosService
+      .actualizarProducto(id, req.body, req.files, req.body.imagenesExistentes)
+      .then((productoActualizado) =>
+        res.status(200).json({
+          message: "Producto actualizado con éxito",
+          data: productoActualizado,
+        })
+      )
+      .catch((error) => {
+        if (error.message === "Producto no encontrado") {
+          return res.status(404).json({ message: error.message });
+        }
+        res.status(500).json({ message: error.message });
+      });
+  },
 
-    if (data.productoDestacado === 'true') data.productoDestacado = true;
-    if (data.productoDestacado === 'false') data.productoDestacado = false;
-    const productoActualizado = await Producto.findByIdAndUpdate(req.params.id, data, { returnDocument: 'after' });
-    if (!productoActualizado) return res.status(404).json({ message: "Producto no encontrado" });
+  deleteProducto: (req, res) => {
+    const id = req.params.id;
+    productosService
+      .eliminarProducto(id)
+      .then(() =>
+        res.status(200).json({
+          message: "Producto eliminado con éxito",
+        })
+      )
+      .catch((error) => {
+        if (error.message === "Producto no encontrado") {
+          return res.status(404).json({ message: error.message });
+        }
+        res.status(500).json({ message: error.message });
+      });
+  },
 
-    // Si hubo interacción con imágenes (vienen nuevas o vienen existentes)
-    if (req.body.imagenesExistentes !== undefined || (req.files && req.files.length > 0)) {
-      const imagenesDB = await Imagen.find({ idProducto: req.params.id });
-      
-      const imagenesABorrar = imagenesDB.filter(img => !urlsExistentes.includes(img.ubicacion));
-      for (const img of imagenesABorrar) {
-        await Imagen.findByIdAndDelete(img._id);
-      }
-
-      if (req.files && req.files.length > 0) {
-        const imagenesPromises = req.files.map(async file => {
-          const compressedBuffer = await sharp(file.buffer)
-            .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
-            .jpeg({ quality: 80 })
-            .toBuffer();
-
-          const base64Data = compressedBuffer.toString('base64');
-          const ubicacion = `data:image/jpeg;base64,${base64Data}`;
-          const nuevaImagen = new Imagen({
-            idProducto: req.params.id,
-            tipo: 'image/jpeg',
-            ubicacion: ubicacion
-          });
-          return nuevaImagen.save();
-        });
-        await Promise.all(imagenesPromises);
-      }
-    }
-
-    const productoFinal = await Producto.findById(req.params.id).populate("imagenes");
-    res.status(200).json(productoFinal);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
-
-export const deleteProducto = async (req, res) => {
-  try {
-    const productoEliminado = await Producto.findByIdAndDelete(req.params.id);
-    if (!productoEliminado) return res.status(404).json({ message: "Producto no encontrado" });
-    
-    await Imagen.deleteMany({ idProducto: req.params.id });
-
-    res.status(200).json({ message: "Producto eliminado" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-export const searchProductos = async (req, res) => {
-  try {
+  searchProductos: (req, res) => {
     const { q } = req.query;
-    const query = {
-      $or: [
-        { nombre: { $regex: q, $options: 'i' } },
-        { descripcionCorta: { $regex: q, $options: 'i' } },
-        { descripcionCompleta: { $regex: q, $options: 'i' } }
-      ]
-    };
-    const productos = await Producto.find(query).populate("idCategoria").populate({ path: "imagenes", perDocumentLimit: 1 });
-    res.status(200).json(productos);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 12;
+
+    productosService
+      .buscar(q, page, limit)
+      .then((response) =>
+        res.status(200).json({
+          message: "Búsqueda completada",
+          data: response.productos,
+          pagination: response.pagination,
+        })
+      )
+      .catch((error) => res.status(500).json({ message: error.message }));
+  },
+
+  filterProductos: (req, res) => {
+    const { categoria } = req.query;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 12;
+
+    productosService
+      .filtrarPorCategoria(categoria, page, limit)
+      .then((response) =>
+        res.status(200).json({
+          message: "Filtro aplicado",
+          data: response.productos,
+          pagination: response.pagination,
+        })
+      )
+      .catch((error) => res.status(500).json({ message: error.message }));
+  },
 };
 
-export const filterProductos = async (req, res) => {
-  try {
-    const { categoria } = req.query;
-    let query = {};
-    if (categoria) {
-      query.idCategoria = categoria;
-    }
-    const productos = await Producto.find(query).populate("idCategoria").populate({ path: "imagenes", perDocumentLimit: 1 });
-    res.status(200).json(productos);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+const getProductos = productosController.getProductos;
+const getProductoById = productosController.getProductoById;
+const createProducto = productosController.createProducto;
+const updateProducto = productosController.updateProducto;
+const deleteProducto = productosController.deleteProducto;
+const searchProductos = productosController.searchProductos;
+const filterProductos = productosController.filterProductos;
+
+export {
+  productosController,
+  getProductos,
+  getProductoById,
+  createProducto,
+  updateProducto,
+  deleteProducto,
+  searchProductos,
+  filterProductos,
 };

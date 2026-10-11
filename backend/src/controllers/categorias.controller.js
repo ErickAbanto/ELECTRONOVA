@@ -1,50 +1,82 @@
-import { Categoria } from "../models/Categoria.js";
+import mongoose from "mongoose";
+import { categoriasService } from "../services/categorias.service.js";
 
-export const getCategorias = async (req, res) => {
+const getCategorias = async (req, res, next) => {
   try {
-    const categorias = await Categoria.find();
-    res.status(200).json(categorias);
+    const categorias = await categoriasService.listarTodas();
+    return res.status(200).json(categorias);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-export const getCategoriaById = async (req, res) => {
+const getCategoriaById = async (req, res, next) => {
   try {
-    const categoria = await Categoria.findById(req.params.id);
-    if (!categoria) return res.status(404).json({ message: "Categoría no encontrada" });
-    res.status(200).json(categoria);
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "ID de categoría inválido" });
+    }
+
+    const categoria = await categoriasService.obtenerPorId(id);
+    if (!categoria) {
+      return res.status(404).json({ message: "Categoría no encontrada" });
+    }
+
+    return res.status(200).json(categoria);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-export const createCategoria = async (req, res) => {
+const createCategoria = async (req, res, next) => {
   try {
-    const nuevaCategoria = new Categoria(req.body);
-    const categoriaGuardada = await nuevaCategoria.save();
-    res.status(201).json(categoriaGuardada);
+    const categoriaGuardada = await categoriasService.crear(req.body);
+    return res.status(201).json(categoriaGuardada);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    next(error);
   }
 };
 
-export const updateCategoria = async (req, res) => {
+const updateCategoria = async (req, res, next) => {
   try {
-    const categoriaActualizada = await Categoria.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' });
-    if (!categoriaActualizada) return res.status(404).json({ message: "Categoría no encontrada" });
-    res.status(200).json(categoriaActualizada);
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "ID de categoría inválido" });
+    }
+
+    const categoriaActualizada = await categoriasService.actualizar(id, req.body);
+    if (!categoriaActualizada) {
+      return res.status(404).json({ message: "Categoría no encontrada" });
+    }
+
+    return res.status(200).json(categoriaActualizada);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    next(error);
   }
 };
 
-export const deleteCategoria = async (req, res) => {
+const deleteCategoria = async (req, res, next) => {
   try {
-    const categoriaEliminada = await Categoria.findByIdAndDelete(req.params.id);
-    if (!categoriaEliminada) return res.status(404).json({ message: "Categoría no encontrada" });
-    res.status(200).json({ message: "Categoría eliminada" });
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "ID de categoría inválido" });
+    }
+
+    const categoriaEliminada = await categoriasService.eliminar(id);
+    if (!categoriaEliminada) {
+      return res.status(404).json({ message: "Categoría no encontrada" });
+    }
+
+    return res.status(200).json({ message: "Categoría eliminada exitosamente" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
+};
+
+export {
+  getCategorias,
+  getCategoriaById,
+  createCategoria,
+  updateCategoria,
+  deleteCategoria,
 };

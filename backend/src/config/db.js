@@ -3,14 +3,16 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const dbURI = process.env.MONGODB_URI || "mongodb://localhost:27017/electronova";
+const dbURI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/electronova";
 
-export const connectDB = async () => {
+const connectDB = async () => {
   try {
-    await mongoose.connect(dbURI);
-    console.log("Conectado exitosamente a MongoDB compass");
+    const conn = await mongoose.connect(dbURI);
+    console.log(`[MongoDB] Conexión establecida con éxito en: ${conn.connection.host}/${conn.connection.name}`);
   } catch (error) {
-    console.error("Error al conectar a MongoDB:", error);
+    console.error("[MongoDB] Error de conexión:", error.message);
     process.exit(1);
   }
 };
+
+export { connectDB };
