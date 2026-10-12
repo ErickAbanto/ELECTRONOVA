@@ -8,58 +8,1202 @@ import { Imagen } from "../models/Imagen.js";
 
 dotenv.config();
 
+// Helper para generar imagen SVG en Base64 con icono y colores según categoría
+const generarSvgBase64 = (titulo, colorHex = "#0d47a1") => {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+    <rect width="600" height="600" fill="#f8fafc"/>
+    <rect x="20" y="20" width="560" height="560" rx="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="4"/>
+    <circle cx="300" cy="240" r="90" fill="${colorHex}" opacity="0.12"/>
+    <path d="M290 170 L250 250 L295 250 L280 320 L350 230 L305 230 Z" fill="${colorHex}"/>
+    <text x="300" y="390" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#1e293b" text-anchor="middle">${titulo.slice(0, 32)}</text>
+    <text x="300" y="425" font-family="Arial, sans-serif" font-size="14" fill="#64748b" text-anchor="middle">ELECTRONOVA • Catálogo Eléctrico</text>
+  </svg>`;
+  return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
+};
+
 const seedDatabase = async () => {
   try {
     await connectDB();
     console.log("Limpiando la base de datos...");
-    await Administrador.deleteMany({});
-    await Categoria.deleteMany({});
-    await Empresa.deleteMany({});
-    await Producto.deleteMany({});
-    await Imagen.deleteMany({});
+    await Promise.all([
+      Administrador.deleteMany({}),
+      Categoria.deleteMany({}),
+      Empresa.deleteMany({}),
+      Producto.deleteMany({}),
+      Imagen.deleteMany({}),
+    ]);
 
-    console.log("Insertando datos de prueba...");
-
+    console.log("Creando Administrador y Empresa...");
     const admin = new Administrador({
       nombre: "Admin Principal",
       correo: "admin@electronova.com",
-      contraseña: "password123"
+      contraseña: "password123",
     });
     const savedAdmin = await admin.save();
 
     const empresa = new Empresa({
       nombre: "ELECTRONOVA S.A.C.",
-      descripcion: "Catálogo virtual de productos eléctricos",
-      direccion: "Av. Principal 123, Lima",
-      horarioAtencion: "Lunes a Viernes de 9am a 6pm",
-      contacto: "+51 987654321"
+      descripcion: "Distribuidora mayorista y minorista de materiales y equipamiento eléctrico industrial y domiciliario.",
+      direccion: "Av. Argentina 1845, Cercado de Lima, Perú",
+      horarioAtencion: "Lunes a Sábado de 8:00 AM a 6:30 PM",
+      contacto: "+51 987 654 321 | ventas@electronova.com",
+      redesSociales: "Facebook: @ElectronovaPeru | LinkedIn: Electronova S.A.C.",
     });
     await empresa.save();
 
-    const categoria = new Categoria({
-      nombre: "Cables Eléctricos",
-      descripcion: "Todo tipo de cables para instalaciones",
-      idAdministrador: savedAdmin._id
-    });
-    const savedCategoria = await categoria.save();
+    console.log("Creando 10 Categorías...");
+    const categoriasData = [
+      {
+        nombre: "Conductores y Cables Eléctricos",
+        descripcion: "Cables de cobre libre de halógenos, THW, vulcanizados y especiales.",
+        color: "#1e40af",
+      },
+      {
+        nombre: "Tableros y Protección Eléctrica",
+        descripcion: "Interruptores termomagnéticos, diferenciales, guardamotores y cajas de distribución.",
+        color: "#b91c1c",
+      },
+      {
+        nombre: "Iluminación LED e Industrial",
+        descripcion: "Campanas industriales, paneles LED, reflectores y tubos de alta eficiencia.",
+        color: "#d97706",
+      },
+      {
+        nombre: "Tomacorrientes e Interruptores",
+        descripcion: "Módulos, placas domiciliarias, tomas GFCI y mecanismos de mando.",
+        color: "#047857",
+      },
+      {
+        nombre: "Canalización y Tuberías",
+        descripcion: "Tuberías Conduit EMT/PVC, canaletas adhesivas, cajas de pase y accesorios.",
+        color: "#475569",
+      },
+      {
+        nombre: "Tomas y Clavijas Industriales",
+        descripcion: "Enchufes y tomas estancas IP44 e IP67 para entornos exigentes de fuerza motriz.",
+        color: "#6b21a8",
+      },
+      {
+        nombre: "Automatización y Control Industrial",
+        descripcion: "Contactores, variadores de frecuencia, pulsadores, relés y temporizadores.",
+        color: "#0369a1",
+      },
+      {
+        nombre: "Herramientas e Instrumentación",
+        descripcion: "Multímetros, pinzas amperimétricas, alicates pelacables y probadores de voltaje.",
+        color: "#c2410c",
+      },
+      {
+        nombre: "Sistemas de Puesta a Tierra",
+        descripcion: "Varillas de cobre puro, dosis de gel mejorador, cajas de registro y soldadura.",
+        color: "#15803d",
+      },
+      {
+        nombre: "Seguridad y EPP Eléctrico",
+        descripcion: "Equipos de protección personal dieléctricos, guantes, cascos y caretas anti-arco.",
+        color: "#be123c",
+      },
+    ];
 
-    const producto = new Producto({
-      nombre: "Cable THW 12 AWG",
-      productoDestacado: true,
-      especificacionesTec: "Cable de cobre, 600V, resistente al calor y humedad.",
-      idCategoria: savedCategoria._id,
+    const categoriasInsertadas = await Categoria.insertMany(
+      categoriasData.map((c) => ({
+        nombre: c.nombre,
+        descripcion: c.descripcion,
+        estado: true,
+        idAdministrador: savedAdmin._id,
+      }))
+    );
+
+    // Mapeo por índice para asociar productos fácilmente
+    const cat = categoriasInsertadas;
+
+    console.log("Definiendo catálogo de 100 productos reales...");
+    const productosData = [
+      // ==========================================================
+      // CATEGORÍA 0: Conductores y Cables Eléctricos (10 productos)
+      // ==========================================================
+      {
+        catIndex: 0,
+        nombre: "Cable THW-90 14 AWG Indeco (Rollo 100m)",
+        precio: 115.0,
+        destacado: true,
+        descripcionCorta: "Conductor de cobre electrolítico de 90°C para instalaciones interiores.",
+        descripcionCompleta: "Cable THW-90 calibre 14 AWG marca Indeco. Aislamiento termoplástico de PVC resistente al calor y humedad. Tensión de operación 450/750V.",
+        especificacionesTec: "Calibre: 14 AWG | Tensión: 750V | Temperatura: 90°C | Conductor: Cobre blando | Aislamiento: PVC retardante a la llama.",
+        caracteristicas: "Longitud: 100 metros | Color: Rojo | Certificación: NTP 370.252.",
+      },
+      {
+        catIndex: 0,
+        nombre: "Cable THW-90 12 AWG Indeco (Rollo 100m)",
+        precio: 175.5,
+        destacado: true,
+        descripcionCorta: "Cable unipolar de cobre para circuitos de tomacorrientes domiciliarios.",
+        descripcionCompleta: "Cable THW-90 calibre 12 AWG marca Indeco, estándar para cableado de circuitos derivados y alimentadores de fuerza.",
+        especificacionesTec: "Calibre: 12 AWG | Capacidad: 25A | Aislamiento: PVC 90°C | Tensión nominal: 450/750V.",
+        caracteristicas: "Rollo de 100m | Colores disponibles: Negro, Azul, Rojo | Calidad Indeco.",
+      },
+      {
+        catIndex: 0,
+        nombre: "Cable THW-90 10 AWG Indeco (Rollo 100m)",
+        precio: 285.0,
+        destacado: false,
+        descripcionCorta: "Conductor para alimentadores principales y cargas medianas.",
+        descripcionCompleta: "Conductor Indeco calibre 10 AWG diseñado para soportar consumos elevados en bombas de agua, cocinas eléctricas y tableros.",
+        especificacionesTec: "Calibre: 10 AWG | Capacidad: 35A | Temperatura: 90°C | Tensión: 750V.",
+        caracteristicas: "Presentación: Rollo 100m | Fabricado en cobre de 99.9% de pureza.",
+      },
+      {
+        catIndex: 0,
+        nombre: "Cable Libre de Halógenos NH-80 2.5 mm² Indeco",
+        precio: 210.0,
+        destacado: true,
+        descripcionCorta: "Cable no propagador de incendios con baja emisión de humos tóxicos.",
+        descripcionCompleta: "Conductor ecológico libre de halógenos NH-80 según normativa del Código Nacional de Electricidad para locales de pública concurrencia.",
+        especificacionesTec: "Sección: 2.5 mm² | Tensión: 450/750V | Norma: NTP 370.252 / IEC 60332.",
+        caracteristicas: "Cero emisión de halógenos | No emite gases corrosivos | Rollo 100m.",
+      },
+      {
+        catIndex: 0,
+        nombre: "Cable Libre de Halógenos NH-80 4 mm² Indeco",
+        precio: 320.0,
+        destacado: false,
+        descripcionCorta: "Cable de seguridad para circuitos de fuerza en edificios y comercios.",
+        descripcionCompleta: "Conductor NH-80 de 4 mm² diseñado para alta seguridad contra incendios en hospitales, centros comerciales y edificios residenciales.",
+        especificacionesTec: "Sección: 4 mm² | Resistencia térmica: 80°C | Aislamiento termoplástico libre de halógenos.",
+        caracteristicas: "Rollo de 100m | Color: Negro | Baja opacidad de humos.",
+      },
+      {
+        catIndex: 0,
+        nombre: "Cable Vulcanizado NLT 3x14 AWG (Rollo 100m)",
+        precio: 360.0,
+        destacado: false,
+        descripcionCorta: "Cable flexible para extensiones industriales y herramientas portátiles.",
+        descripcionCompleta: "Cable vulcanizado trifilar calibre 3x14 AWG de alta flexibilidad y resistencia al maltrato mecánico, grasas y aceites.",
+        especificacionesTec: "3 conductores de 14 AWG | Tensión: 300/500V | Cubierta exterior de PVC flexible.",
+        caracteristicas: "Longitud: 100 metros | Resistente a la abrasión y uso rudo.",
+      },
+      {
+        catIndex: 0,
+        nombre: "Cable Vulcanizado NLT 3x12 AWG (Rollo 100m)",
+        precio: 520.0,
+        destacado: true,
+        descripcionCorta: "Conductor flexible de uso extrapesado para equipos de potencia.",
+        descripcionCompleta: "Cordón flexible tipo vulcanizado 3x12 AWG con aislamiento individual y chaqueta exterior negra resistente a golpes.",
+        especificacionesTec: "Conductores: 3 x 12 AWG | Capacidad: 20A en servicio continuo | Tensión: 600V.",
+        caracteristicas: "Apto para talleres, generadores y máquinas de soldar portátiles.",
+      },
+      {
+        catIndex: 0,
+        nombre: "Cable de Cobre Desnudo 16 mm² para Pozo a Tierra",
+        precio: 14.5,
+        destacado: false,
+        descripcionCorta: "Conductor de cobre electrolítico temple blando por metro lineal.",
+        descripcionCompleta: "Cable de cobre temple blando 7 hilos de 16 mm² para conexión de sistemas de puesta a tierra y pararrayos.",
+        especificacionesTec: "Sección: 16 mm² | Conductividad: 100% IACS | Configuración: 7 hilos concéntricos.",
+        caracteristicas: "Venta por metro lineal | Resistente a la corrosión galvánica.",
+      },
+      {
+        catIndex: 0,
+        nombre: "Cable de Cobre Desnudo 35 mm² para Pozo a Tierra",
+        precio: 31.0,
+        destacado: false,
+        descripcionCorta: "Conductor de tierra de alta capacidad para subestaciones y tableros.",
+        descripcionCompleta: "Cable de cobre desnudo de 35 mm² para enlace equipotencial y mallas de puesta a tierra de subestaciones y edificios.",
+        especificacionesTec: "Sección: 35 mm² | Hilos: 19 hilos de cobre puro electrolítico | Norma: ASTM B8.",
+        caracteristicas: "Excelente disipación de corriente de falla a tierra.",
+      },
+      {
+        catIndex: 0,
+        nombre: "Cable UTP Cat 6 Chaqueta Azul LSZH (Caja 305m)",
+        precio: 450.0,
+        destacado: false,
+        descripcionCorta: "Cable de datos Gigabit Ethernet para cableado estructurado comercial.",
+        descripcionCompleta: "Cable UTP Categoría 6 de 4 pares trenzados con cruceta separadora y chaqueta LSZH retardante al fuego para redes de datos y cámaras IP.",
+        especificacionesTec: "Frecuencia: 250 MHz | Velocidad: Hasta 1 Gbps / 10 Gbps a corta distancia | Calibre: 23 AWG.",
+        caracteristicas: "Presentación en caja Pull-Box de 305 metros | Color azul.",
+      },
+
+      // ==========================================================
+      // CATEGORÍA 1: Tableros y Protección Eléctrica (10 productos)
+      // ==========================================================
+      {
+        catIndex: 1,
+        nombre: "Interruptor Termomagnético 2x20A Schneider Acti9 iK60N",
+        precio: 42.0,
+        destacado: true,
+        descripcionCorta: "Disyuntor bipolar para protección de circuitos de tomacorrientes.",
+        descripcionCompleta: "Interruptor automático miniatura Schneider Electric Acti9 iK60N 2P 20A Curva C con capacidad de ruptura de 6kA.",
+        especificacionesTec: "Polos: 2P | Corriente: 20A | Curva: C | Poder de corte: 6kA a 230VAC | Montaje: Riel DIN.",
+        caracteristicas: "Indicador de disparo | Conexión segura con bornes aislados.",
+      },
+      {
+        catIndex: 1,
+        nombre: "Interruptor Termomagnético 2x32A Schneider Acti9 iK60N",
+        precio: 48.0,
+        destacado: false,
+        descripcionCorta: "Protección magnetotérmica bipolar para cargas de mayor potencia.",
+        descripcionCompleta: "Disyuntor Schneider Electric 2x32A curva C 6kA para alimentadores de tableros secundarios o cocinas eléctricas.",
+        especificacionesTec: "Polos: 2P | Capacidad: 32A | Tensión nominal: 230/400V | Frecuencia: 50/60Hz.",
+        caracteristicas: "Riel DIN 35mm | Terminales de jaula anti-aflojamiento.",
+      },
+      {
+        catIndex: 1,
+        nombre: "Interruptor Diferencial 2x25A 30mA Schneider Acti9 iID",
+        precio: 89.0,
+        destacado: true,
+        descripcionCorta: "Protección contra electrocución y fugas a tierra obligatoria.",
+        descripcionCompleta: "Interruptor diferencial puro (ID) de 2 polos 25A con sensibilidad de 30mA para protección de personas contra contactos directos e indirectos.",
+        especificacionesTec: "Polos: 2P | Corriente: 25A | Sensibilidad: 30 mA | Tipo: AC | Riel DIN.",
+        caracteristicas: "Botón de testeo mensual | Compatible con estándar IEC 61008-1.",
+      },
+      {
+        catIndex: 1,
+        nombre: "Interruptor Diferencial 2x40A 30mA Schneider Acti9 iID",
+        precio: 98.0,
+        destacado: false,
+        descripcionCorta: "Diferencial de alta capacidad para tableros generales residenciales.",
+        descripcionCompleta: "Dispositivo diferencial Schneider Electric 2x40A 30mA diseñado para cabeceras de tableros de distribución.",
+        especificacionesTec: "In: 40A | Inm: 30mA | Polos: 2 | Poder de corte condicional: 10kA con magnetotérmico.",
+        caracteristicas: "Doble clip de enclavamiento para fácil mantenimiento.",
+      },
+      {
+        catIndex: 1,
+        nombre: "Interruptor Termomagnético 3x50A ABB S203 10kA",
+        precio: 185.0,
+        destacado: false,
+        descripcionCorta: "Disyuntor trifásico industrial de alto poder de ruptura.",
+        descripcionCompleta: "Interruptor termomagnético trifásico ABB serie S203 de 50 Amperios con poder de corte de 10kA para aplicaciones comerciales e industriales.",
+        especificacionesTec: "Polos: 3P | Amperaje: 50A | Curva C | Capacidad de ruptura: 10 kA a 400VAC.",
+        caracteristicas: "Certificación europea CE, VDE | Conexión bidireccional de línea.",
+      },
+      {
+        catIndex: 1,
+        nombre: "Tablero de Distribución Metálico Adosable 12 Polos",
+        precio: 95.0,
+        destacado: false,
+        descripcionCorta: "Gabinete de chapa de acero con puerta y chapa de seguridad.",
+        descripcionCompleta: "Tablero eléctrico metálico adosable para 12 polos monofásico/trifásico con riel DIN incorporado, barra de tierra y acabado en pintura electrostática.",
+        especificacionesTec: "Capacidad: 12 llaves monopolares / 6 bipolares | Chapa: Acero LAF 1.2mm | Grado: IP40.",
+        caracteristicas: "Puerta batiente con cerradura monedero | Incluye barra de tierra de cobre.",
+      },
+      {
+        catIndex: 1,
+        nombre: "Tablero de Distribución Empotrable PVC 8 Polos Legrand",
+        precio: 45.0,
+        destacado: false,
+        descripcionCorta: "Caja de distribución termoplástica con puerta ahumada.",
+        descripcionCompleta: "Tablero empotrable Legrand serie Practibox S de 8 módulos con puerta translúcida ahumada resistente al impacto.",
+        especificacionesTec: "Capacidad: 8 módulos DIN | Grado de protección: IP40 / IK07 | Material: Autoextinguible.",
+        caracteristicas: "Diseño elegante para oficinas y departamentos modernos.",
+      },
+      {
+        catIndex: 1,
+        nombre: "Guardamotor Magnetotérmico 9-14A Chint NS2-25",
+        precio: 75.0,
+        destacado: false,
+        descripcionCorta: "Protector integral para arranque de motores trifásicos.",
+        descripcionCompleta: "Guardamotor manual con disparo térmico y magnético para protección contra sobrecargas, cortocircuitos y falla de fase en bombas y motores.",
+        especificacionesTec: "Rango de ajuste: 9A a 14A | Poder de corte: 15kA | Tensión: Hasta 690V.",
+        caracteristicas: "Botones Start/Stop tipo pulsador | Montaje en riel DIN.",
+      },
+      {
+        catIndex: 1,
+        nombre: "Supresor de Sobretensiones Transitorias DPS 2P 40kA Chint",
+        precio: 85.0,
+        destacado: true,
+        descripcionCorta: "Protege electrodomésticos y equipos contra descargas atmosféricas.",
+        descripcionCompleta: "Descargador de sobretensiones clase II de 2 polos para tableros eléctricos, diseñado para disipar picos de voltaje inducidos por rayos.",
+        especificacionesTec: "Imax: 40 kA | In: 20 kA | Up: ≤1.8 kV | Tensión máxima continua Uc: 385VAC.",
+        caracteristicas: "Módulos intercambiables con indicador de estado (Verde=Operativo / Rojo=Reemplazar).",
+      },
+      {
+        catIndex: 1,
+        nombre: "Barra de Distribución Tetrapolar 125A 7 Conexiones",
+        precio: 38.0,
+        destacado: false,
+        descripcionCorta: "Bloque repartidor escalonado para tableros trifásicos con neutro.",
+        descripcionCompleta: "Repartidor modular tetrapolar (4 barras de latón) con aislador termoplástico y tapa transparente para organizar cableado en tableros.",
+        especificacionesTec: "Capacidad: 125A | 7 orificios por barra | Tensión de aislamiento: 500V.",
+        caracteristicas: "Fijación sobre riel DIN o placa base con tornillos.",
+      },
+
+      // ==========================================================
+      // CATEGORÍA 2: Iluminación LED e Industrial (10 productos)
+      // ==========================================================
+      {
+        catIndex: 2,
+        nombre: "Campana Industrial LED UFO 150W 6500K Philips IP65",
+        precio: 210.0,
+        destacado: true,
+        descripcionCorta: "Luminaria colgante de alta potencia para naves industriales y almacenes.",
+        descripcionCompleta: "Campana UFO LED Philips de 150W con flujo luminoso de 19,500 lúmenes, cuerpo de aluminio disipador y protección contra agua y polvo IP65.",
+        especificacionesTec: "Potencia: 150W | Flujo: 19500 lm | Eficacia: 130 lm/W | Temperatura: 6500K Luz Fría | Grado: IP65 / IK08.",
+        caracteristicas: "Vida útil: 50,000 horas | Ángulo de apertura: 90° | Gancho de sujeción incluido.",
+      },
+      {
+        catIndex: 2,
+        nombre: "Campana Industrial LED UFO 200W 6500K Ledvance IP65",
+        precio: 275.0,
+        destacado: false,
+        descripcionCorta: "Iluminación para techos altos de más de 8 metros de altura.",
+        descripcionCompleta: "Luminaria High Bay Ledvance de 200W y 26,000 lúmenes, ideal para centros logísticos, talleres de maestranza y plantas de producción.",
+        especificacionesTec: "Potencia: 200W | Voltaje: 100-277V multitensión | Factor de potencia: >0.95 | Eficacia: 130 lm/W.",
+        caracteristicas: "Driver aislado de alta confiabilidad | Resistente a oscilaciones de red.",
+      },
+      {
+        catIndex: 2,
+        nombre: "Reflector LED Exterior 100W 6500K IP66 Ledvance",
+        precio: 85.0,
+        destacado: true,
+        descripcionCorta: "Proyector LED para fachadas, estacionamientos y canchas deportivas.",
+        descripcionCompleta: "Reflector Ledvance Floodlight de 100W, vidrio templado texturizado antideslumbrante y soporte metálico basculante de 180°.",
+        especificacionesTec: "Potencia: 100W | Flujo: 10,000 lm | Grado: IP66 para intemperie extrema | Vida útil: 30,000 hrs.",
+        caracteristicas: "Cuerpo de aluminio negro anticorrosión | Encendido instantáneo 100%.",
+      },
+      {
+        catIndex: 2,
+        nombre: "Reflector LED Exterior 50W 6500K IP65 Opalux",
+        precio: 42.0,
+        destacado: false,
+        descripcionCorta: "Reflector compacto para iluminación perimetral y jardines.",
+        descripcionCompleta: "Reflector LED extraplano de 50W para uso residencial y comercial con carcasa delgada de aluminio inyectado.",
+        especificacionesTec: "Potencia: 50W | Lumens: 4500 lm | Voltaje: 220V | Temperatura: Luz blanca fría.",
+        caracteristicas: "Ahorro energético del 85% frente a halógenos tradicionales.",
+      },
+      {
+        catIndex: 2,
+        nombre: "Panel LED Adosable / Empotrable 60x60 48W 6500K",
+        precio: 65.0,
+        destacado: false,
+        descripcionCorta: "Panel cuadrado ultradelgado para oficinas y cielo raso falso.",
+        descripcionCompleta: "Panel LED 60x60 cm de 48W con difusor opalino antifatiga visual, iluminación homogénea libre de parpadeo (Flicker Free).",
+        especificacionesTec: "Dimensiones: 595x595x10 mm | Potencia: 48W | Flujo: 4300 lm | CRI: >80.",
+        caracteristicas: "Incluye driver externo 220V | Marco de aluminio anodizado blanco.",
+      },
+      {
+        catIndex: 2,
+        nombre: "Luz de Emergencia LED 2 Faros Recargable Opalux",
+        precio: 52.0,
+        destacado: true,
+        descripcionCorta: "Autonomía de hasta 4 horas para evacuación según norma INDECI.",
+        descripcionCompleta: "Equipo de luces de emergencia LED recargable con batería de libre mantenimiento, faros direccionales independientes y prueba de test.",
+        especificacionesTec: "Batería: 4V 4.5Ah | Autonomía: 4 horas continuas | LEDs: 2 x 12 LEDs ultra brillantes.",
+        caracteristicas: "Asa de transporte y orificios para adosar a la pared | Cable de conexión incluido.",
+      },
+      {
+        catIndex: 2,
+        nombre: "Tubo LED T8 18W 120cm Conexión 1 Extremo Philips (Pack 10)",
+        precio: 95.0,
+        destacado: false,
+        descripcionCorta: "Reemplazo directo de tubos fluorescentes de 36W.",
+        descripcionCompleta: "Pack de 10 tubos de vidrio T8 LED Philips EcoFit de 18W y 120 cm. No requieren balastro ni arrancador, conexión directa a 220V.",
+        especificacionesTec: "Largo: 1200 mm | Potencia: 18W | Flujo: 1800 lm por tubo | Base: G13.",
+        caracteristicas: "Sin parpadeos | Vida útil de 15,000 horas | Vidrio de alta transparencia.",
+      },
+      {
+        catIndex: 2,
+        nombre: "Sensor de Movimiento Infrarrojo 360° para Techo",
+        precio: 35.0,
+        destacado: false,
+        descripcionCorta: "Detector de presencia para pasillos, cocheras y escaleras.",
+        descripcionCompleta: "Sensor PIR para techo con ángulo de detección de 360°, temporizador regulable de 10 segundos a 7 minutos y ajuste de fotocélula día/noche.",
+        especificacionesTec: "Rango de detección: 6 metros de radio | Carga máxima: 1200W incandescente / 300W LED.",
+        caracteristicas: "Fácil instalación con bornes a presión | Reducción de consumo en áreas comunes.",
+      },
+      {
+        catIndex: 2,
+        nombre: "Tira LED 220V Exterior 5050 Blanco Frío (Rollo 50m)",
+        precio: 290.0,
+        destacado: false,
+        descripcionCorta: "Manguera LED decorativa para molduras, fachadas y eventos.",
+        descripcionCompleta: "Tira LED directa a 220VAC recubierta en silicón con protección IP67, 60 LEDs por metro tipo SMD 5050 de alta intensidad.",
+        especificacionesTec: "Longitud: 50 metros | Consumo: 10W por metro | Corte cada 1 metro marcado.",
+        caracteristicas: "Incluye 2 conectores de corriente con rectificador | No necesita transformador.",
+      },
+      {
+        catIndex: 2,
+        nombre: "Foco LED High Wattage 50W E27 6500K Philips",
+        precio: 39.0,
+        destacado: false,
+        descripcionCorta: "Foco bulbo de alta potencia para garajes, locales y almacenes.",
+        descripcionCompleta: "Lámpara LED Philips T-Bulb de 50W con rosca estándar E27, disipador interno de aluminio y 4500 lúmenes de salida.",
+        especificacionesTec: "Rosca: E27 | Potencia: 50W (Equivale a 300W incandescente) | Voltaje: 220-240V.",
+        caracteristicas: "Carcasa plástica resistente a vibraciones y caídas leves.",
+      },
+
+      // ==========================================================
+      // CATEGORÍA 3: Tomacorrientes e Interruptores (10 productos)
+      // ==========================================================
+      {
+        catIndex: 3,
+        nombre: "Tomacorriente Doble con Línea a Tierra Ticino Modus Plus",
+        precio: 16.5,
+        destacado: true,
+        descripcionCorta: "Placa armada de 2 tomas universales con alveolos protegidos.",
+        descripcionCompleta: "Tomacorriente doble con borne de tierra Bticino Modus Plus en color blanco perla. Incluye soporte, mecanismo y placa frontal.",
+        especificacionesTec: "Capacidad: 16A / 250V | Configuración: 2P+T Universal | Bornes con tornillo imperdible.",
+        caracteristicas: "Alveolos protegidos contra inserción accidental | Diseño clásico de alta durabilidad.",
+      },
+      {
+        catIndex: 3,
+        nombre: "Interruptor Simple con Placa Ticino Modus Plus",
+        precio: 11.0,
+        destacado: false,
+        descripcionCorta: "Mecanismo de encendido unipolar para punto de luz.",
+        descripcionCompleta: "Placa completa con interruptor simple Bticino Modus Plus para encendido y apagado de circuitos de iluminación residencial.",
+        especificacionesTec: "Capacidad: 10AX / 250V | Tipo: Unipolar basculante | Montaje: Caja rectangular 4x2.",
+        caracteristicas: "Contactos de plata de alta conductividad | Placa lisa fácil de limpiar.",
+      },
+      {
+        catIndex: 3,
+        nombre: "Interruptor Doble Ticino Modus Plus",
+        precio: 18.0,
+        destacado: false,
+        descripcionCorta: "Dos interruptores independientes en una sola placa 4x2.",
+        descripcionCompleta: "Mecanismo doble basculante Bticino Modus Plus para comandar dos centros de luz en salas y comedores.",
+        especificacionesTec: "Capacidad: 10AX por interruptor | Tensión: 250V | Material: Termoplástico ignífugo.",
+        caracteristicas: "Incluye bastidor metálico rígido y tornillos autorroscantes.",
+      },
+      {
+        catIndex: 3,
+        nombre: "Interruptor Conmutable (Three-Way) Ticino Matix",
+        precio: 22.0,
+        destacado: false,
+        descripcionCorta: "Interruptor de conmutación para escaleras y dormitorios.",
+        descripcionCompleta: "Interruptor conmutador Bticino línea Matix blanca de 1 módulo para encender o apagar una luminaria desde dos lugares distintos.",
+        especificacionesTec: "16AX 250V | Contactos tipo conmutación 3 vías | Sistema modular Matix.",
+        caracteristicas: "Posibilidad de agregar luz piloto LED tenue nocturna.",
+      },
+      {
+        catIndex: 3,
+        nombre: "Tomacorriente GFCI Falla a Tierra 20A 125V Leviton",
+        precio: 78.0,
+        destacado: true,
+        descripcionCorta: "Toma de seguridad obligatoria en baños, cocinas y lavanderías.",
+        descripcionCompleta: "Receptáculo GFCI SmartlockPro de Leviton con autodiagnóstico automático contra fallas de aislamiento en ambientes húmedos.",
+        especificacionesTec: "Capacidad: 20A 125V | Sensibilidad de disparo: 4 a 6 mA | NEMA 5-20R.",
+        caracteristicas: "Botones Test y Reset | Luz LED de estado | Resistente a la manipulación (Tamper-Resistant).",
+      },
+      {
+        catIndex: 3,
+        nombre: "Placa Armada con 2 Puertos USB de Carga Rápida 2.4A",
+        precio: 45.0,
+        destacado: true,
+        descripcionCorta: "Carga teléfonos y tablets directamente en la pared sin adaptador.",
+        descripcionCompleta: "Módulo con dos puertos USB tipo A para empotrar en pared, compatible con cajas estándar 4x2, ideal para veladores y escritorios.",
+        especificacionesTec: "Salida: 5V DC 2.4A compartido | Entrada: 100-240V AC 50/60Hz.",
+        caracteristicas: "Protección contra sobrecargas y cortocircuitos | Acabado blanco satinado.",
+      },
+      {
+        catIndex: 3,
+        nombre: "Pulsador para Timbre Ticino Modus Plus",
+        precio: 13.5,
+        destacado: false,
+        descripcionCorta: "Pulsador de contacto momentáneo con símbolo de campana.",
+        descripcionCompleta: "Placa armada de pulsador Bticino para activación de timbres domiciliarios o zumbadores.",
+        especificacionesTec: "10A 250V | Retorno por resorte de acero inoxidable | Placa blanca 4x2.",
+        caracteristicas: "Grabado indeleble de campana en la tecla.",
+      },
+      {
+        catIndex: 3,
+        nombre: "Caja para Tomacorriente Sobrepuesta para Adosar 4x2",
+        precio: 6.5,
+        destacado: false,
+        descripcionCorta: "Caja plástica externa para instalaciones sin ranurar muro.",
+        descripcionCompleta: "Caja plástica de sobreponer blanca compatible con placas universales 4x2, con troqueles para canaletas de 20x10 y 24x14 mm.",
+        especificacionesTec: "Material: PVC de alto impacto | Medidas: 115 x 75 x 45 mm.",
+        caracteristicas: "Autoextinguible | Tornillos de fijación incluidos.",
+      },
+      {
+        catIndex: 3,
+        nombre: "Dimmer Regulador de Luz Giratorio 300W para LED",
+        precio: 62.0,
+        destacado: false,
+        descripcionCorta: "Control rotativo para atenuar luminarias LED dimerizables.",
+        descripcionCompleta: "Variador de intensidad luminosa compatible con bombillos y paneles LED dimerizables de 220V, con perilla de ajuste suave.",
+        especificacionesTec: "Potencia: Hasta 300W LED | Tensión: 220VAC | Tecnología de corte de fase Triac.",
+        caracteristicas: "Encendido por pulsación y regulación continua rotativa.",
+      },
+      {
+        catIndex: 3,
+        nombre: "Tomacorriente Schuko 16A Embebido con Tapa Estanca IP44",
+        precio: 28.0,
+        destacado: false,
+        descripcionCorta: "Toma de estándar europeo con tapa protectora con resorte.",
+        descripcionCompleta: "Tomacorriente tipo Schuko (alemán) para empotrar en exteriores o talleres, con tapa abatible que previene salpicaduras de agua.",
+        especificacionesTec: "16A 250V | Grado: IP44 | Conexión con bornes de resorte rápido.",
+        caracteristicas: "Junta de jebe perimetral para sellado hermético contra la pared.",
+      },
+
+      // ==========================================================
+      // CATEGORÍA 4: Canalización y Tuberías (10 productos)
+      // ==========================================================
+      {
+        catIndex: 4,
+        nombre: "Tubo Conduit PVC Pesado 3/4\" x 3m Pavco",
+        precio: 8.5,
+        destacado: false,
+        descripcionCorta: "Tubería rígida de PVC para instalaciones eléctricas empotradas.",
+        descripcionCompleta: "Tubo Conduit clase pesada SAP de 3/4 pulgada por 3 metros de longitud para protección de cableado en losas de concreto y muros.",
+        especificacionesTec: "Diámetro: 3/4\" (26.5 mm exterior) | Largo: 3 metros | Norma: NTP 399.006.",
+        caracteristicas: "Resistente al aplastamiento | Unión mediante campana y pegamento PVC.",
+      },
+      {
+        catIndex: 4,
+        nombre: "Tubo Conduit Metálico EMT 3/4\" x 3m Galvanizado",
+        precio: 24.0,
+        destacado: true,
+        descripcionCorta: "Tubería de acero cincado para instalaciones a la vista en techos.",
+        descripcionCompleta: "Tubo conduit de acero galvanizado Electrical Metallic Tubing (EMT) de 3/4\" de pared delgada, ideal para centros comerciales y estacionamientos.",
+        especificacionesTec: "Diámetro: 3/4\" | Longitud: 3.05 m | Norma: ANSI C80.3 / UL 797.",
+        caracteristicas: "Galvanizado en caliente | Fácil de doblar con curvadora manual.",
+      },
+      {
+        catIndex: 4,
+        nombre: "Curva Conduit EMT 90° de 3/4\"",
+        precio: 5.5,
+        destacado: false,
+        descripcionCorta: "Accesorio preformado para cambios de dirección a 90 grados.",
+        descripcionCompleta: "Curva metálica prefabricada para acoplar con conectores o uniones EMT en tendidos superficiales.",
+        especificacionesTec: "Ángulo: 90° | Radio estándar | Acero galvanizado electrolítico.",
+        caracteristicas: "Acabado liso interior para jalado sin fricción de cables.",
+      },
+      {
+        catIndex: 4,
+        nombre: "Conector Recto EMT 3/4\" con Tornillo de Fijación",
+        precio: 2.8,
+        destacado: false,
+        descripcionCorta: "Unión de tubo EMT a caja de pase o tablero eléctrico.",
+        descripcionCompleta: "Conector metálico de zamak o acero cincado con contratuerca hexagonal y tornillo prisionero para sujeción firme del tubo.",
+        especificacionesTec: "Para tubo EMT 3/4\" | Rosca NPT macho con tuerca de bloqueo.",
+        caracteristicas: "Asegura continuidad eléctrica de tierra en toda la tubería.",
+      },
+      {
+        catIndex: 4,
+        nombre: "Caja de Pase Metálica Galvanizada 4x4x2\" Pesada",
+        precio: 9.0,
+        destacado: false,
+        descripcionCorta: "Caja de derivación de chapa de acero con troqueles ciegos.",
+        descripcionCompleta: "Caja cuadrada de 4x4x2 pulgadas troquelada (knockouts de 1/2\" y 3/4\") galvanizada para empalmes y paso de conductores eléctricos.",
+        especificacionesTec: "Dimensiones: 100 x 100 x 50 mm | Chapa galvanizada de 1.2 mm.",
+        caracteristicas: "Orificio roscado para tornillo de puesta a tierra.",
+      },
+      {
+        catIndex: 4,
+        nombre: "Capa Octogonal de PVC para Salida de Techo 4\"",
+        precio: 3.2,
+        destacado: false,
+        descripcionCorta: "Caja octogonal para empotrar centros de luz y lámparas.",
+        descripcionCompleta: "Caja termoplástica octogonal de 4 pulgadas con pestañas y orejas de fijación para soportar luminarias en cielos rasos.",
+        especificacionesTec: "Entradas para tubos de 1/2\", 3/4\" y 1\" | PVC indeformable.",
+        caracteristicas: "Excelente resistencia a la presión de vaciado de concreto.",
+      },
+      {
+        catIndex: 4,
+        nombre: "Canaleta Plástica con Adhesivo 20x10 mm x 2m Dexson",
+        precio: 7.0,
+        destacado: false,
+        descripcionCorta: "Canaleta decorativa con cinta doble faz de alta adherencia.",
+        descripcionCompleta: "Canaleta Schneider Dexson de 20x10 mm por 2 metros con adhesivo de espuma automotriz para ruteo superficial limpio de cables de red y luz.",
+        especificacionesTec: "Dimensiones: 20x10 mm | Largo: 2 metros | Material: PVC autoextinguible.",
+        caracteristicas: "Cierre hermético con sistema de pestaña que no se abre con el peso.",
+      },
+      {
+        catIndex: 4,
+        nombre: "Canaleta Plástica Ranurada para Tablero 40x40 mm x 2m",
+        precio: 18.0,
+        destacado: false,
+        descripcionCorta: "Canaleta tipo peine para peinado y orden en tableros de control.",
+        descripcionCompleta: "Canaleta de PVC gris con ranuras laterales flexibles para salida rápida de cables hacia interruptores y borneras.",
+        especificacionesTec: "Sección: 40x40 mm | Largo: 2 metros | Tapa desmontable a presión.",
+        caracteristicas: "Libre de rebabas para evitar cortes en el aislamiento del cable.",
+      },
+      {
+        catIndex: 4,
+        nombre: "Prensaestopas de Nylon M20 IP68 con Contratuerca",
+        precio: 3.5,
+        destacado: false,
+        descripcionCorta: "Pasacables estanco para cajas de paso y motores.",
+        descripcionCompleta: "Prensaestopas métrico M20 con empaque de caucho NBR que garantiza sellado hermético IP68 y sujeción mecánica contra tirones.",
+        especificacionesTec: "Rosca: M20 x 1.5 | Rango de cable: 6 a 12 mm | Material: Poliamida 66.",
+        caracteristicas: "Resistente a rayos UV, aceites y ácidos diluidos.",
+      },
+      {
+        catIndex: 4,
+        nombre: "Abrazadera Tipo Uña EMT 3/4\" Galvanizada (Bolsa 50 un)",
+        precio: 19.5,
+        destacado: false,
+        descripcionCorta: "Sujetador de 1 ala para fijar tubería a muros y vigas.",
+        descripcionCompleta: "Pack de 50 abrazaderas metálicas tipo uña de 3/4 de pulgada con nervio central de refuerzo para tubos conduit EMT.",
+        especificacionesTec: "Acero al carbono galvanizado | Espesor: 1.0 mm | Orificio para tarugo de 1/4\".",
+        caracteristicas: "Fijación rápida y segura con solo un perno por abrazadera.",
+      },
+
+      // ==========================================================
+      // CATEGORÍA 5: Tomas y Clavijas Industriales (10 productos)
+      // ==========================================================
+      {
+        catIndex: 5,
+        nombre: "Enchufe Industrial Macho 3P+T 16A 380V IP44 Mennekes",
+        precio: 38.0,
+        destacado: true,
+        descripcionCorta: "Clavija trifásica de 4 polos para fuerza motriz.",
+        descripcionCompleta: "Enchufe macho aéreo Mennekes serie ProTOP de 16 Amperios 380-415V (3 Polos + Tierra, posición horaria 6h) con prensacable integrado.",
+        especificacionesTec: "Configuración: 3P+T | Corriente: 16A | Voltaje: 400V 50/60Hz | Grado: IP44.",
+        caracteristicas: "Carcasa de poliamida irrompible | Cierre por torsión sin tornillos.",
+      },
+      {
+        catIndex: 5,
+        nombre: "Toma Industrial Aérea Hembra 3P+T 16A 380V IP44 Mennekes",
+        precio: 46.0,
+        destacado: false,
+        descripcionCorta: "Acople hembra para extensiones trifásicas de obra.",
+        descripcionCompleta: "Conector hembra flotante con tapa de protección con resorte de retorno, contactos niquelados resistentes a la corrosión.",
+        especificacionesTec: "16A 400V 3P+T | IP44 | Posición tierra: 6 horas | Color rojo industrial.",
+        caracteristicas: "Contactos de latón macizo para baja resistencia de contacto.",
+      },
+      {
+        catIndex: 5,
+        nombre: "Toma Industrial de Pared para Adosar 3P+T 32A 380V IP67",
+        precio: 85.0,
+        destacado: true,
+        descripcionCorta: "Base mural estanca sumergible temporalmente para minería e industria.",
+        descripcionCompleta: "Toma de pared estanca IP67 de 32 Amperios con anillo de bloqueo a rosca y junta de neopreno para ambientes con polvo y chorros de agua.",
+        especificacionesTec: "Corriente: 32A | Tensión: 380-415V | 3P+T | Grado de protección: IP67.",
+        caracteristicas: "Entrada superior con rosca M25 y troquel inferior.",
+      },
+      {
+        catIndex: 5,
+        nombre: "Enchufe Industrial Macho 3P+T 32A 380V IP67 Steck",
+        precio: 62.0,
+        destacado: false,
+        descripcionCorta: "Clavija aérea estanca de 32 Amperios para trabajo pesado.",
+        descripcionCompleta: "Enchufe macho Steck con anillo de cierre hermético IP67 resistente a impactos mecánicos IK08 para puertos y faenas mineras.",
+        especificacionesTec: "32A 380V 3P+T | IP67 | Carcasa de termoplástico autoextinguible.",
+        caracteristicas: "Prensaestopas de compresión que retiene el cable contra desgarros.",
+      },
+      {
+        catIndex: 5,
+        nombre: "Toma Monofásica Industrial 2P+T 16A 220V IP44 Scame",
+        precio: 29.0,
+        destacado: false,
+        descripcionCorta: "Enchufe hembra azul para máquinas monofásicas de 220V.",
+        descripcionCompleta: "Toma hembra para adosar Scame de 16A 200-250V en color azul (posición 6h) común en soldadoras y compresoras monofásicas.",
+        especificacionesTec: "Configuración: 2P+T | Amperaje: 16A | Voltaje: 220V | Grado: IP44.",
+        caracteristicas: "Tapa con resorte para evitar acumulación de polvo.",
+      },
+      {
+        catIndex: 5,
+        nombre: "Clavija Monofásica Industrial Macho 2P+T 16A 220V Scame",
+        precio: 22.0,
+        destacado: false,
+        descripcionCorta: "Macho aéreo azul de 16 Amperios para equipos móviles.",
+        descripcionCompleta: "Clavija aérea Scame de diseño ergonómico con prensa de sujeción para cables flexibles vulcanizados.",
+        especificacionesTec: "16A 230V 2P+T | IP44 | Bornes de conexión para cables de hasta 4 mm².",
+        caracteristicas: "Fácil desarme mediante sistema de trinquete de apertura rápida.",
+      },
+      {
+        catIndex: 5,
+        nombre: "Toma Industrial Macho Empotrable en Tablero 3P+N+T 32A",
+        precio: 55.0,
+        destacado: false,
+        descripcionCorta: "Base de panel con neutro para tableros móviles de faena.",
+        descripcionCompleta: "Entrada macho para empotrar en chapa metálica de 5 polos (3 fases + Neutro + Tierra) para alimentación de tableros de distribución portátil.",
+        especificacionesTec: "5 pines | 32A 400V | Posición horaria: 6h | Brida de montaje cuadrada 75x75 mm.",
+        caracteristicas: "Cumple con norma IEC 60309-1 / IEC 60309-2.",
+      },
+      {
+        catIndex: 5,
+        nombre: "Caja de Tomas Múltiples de Obra IP65 con Manija",
+        precio: 230.0,
+        destacado: true,
+        descripcionCorta: "Tablero portátil con 4 tomas industriales y térmicas internas.",
+        descripcionCompleta: "Distribuidor portátil de energía con 2 tomas trifásicas 16A 380V y 2 tomas monofásicas 16A 220V, asa de transporte y ventana abatible para llaves.",
+        especificacionesTec: "Grado: IP65 | Material: ABS resistente al impacto | Riel DIN interno de 8 polos.",
+        caracteristicas: "Ideal para eventos temporales, construcción civil y mantenimiento.",
+      },
+      {
+        catIndex: 5,
+        nombre: "Enchufe Macho Industrial 3P+T 63A 380V IP67 Mennekes",
+        precio: 145.0,
+        destacado: false,
+        descripcionCorta: "Conector aéreo de alta corriente para generadores y compresores.",
+        descripcionCompleta: "Clavija industrial de 63 Amperios con contactos tipo SoftCONTACT de baja fricción y tuerca de sellado IP67.",
+        especificacionesTec: "Corriente: 63A | Voltaje: 400V | Sección de cable admitida: hasta 16 mm².",
+        caracteristicas: "Cuerpo reforzado con fibra de vidrio para máxima rigidez mecánica.",
+      },
+      {
+        catIndex: 5,
+        nombre: "Toma Industrial Hembra 3P+T 63A 380V IP67 Mennekes",
+        precio: 185.0,
+        destacado: false,
+        descripcionCorta: "Base aérea para empalmes de potencia móvil de 63A.",
+        descripcionCompleta: "Acoplador hembra con anillo de cierre hermético y contactos piloto auxiliares para monitoreo de conexión.",
+        especificacionesTec: "63A 380-415V | 3 Polos + Tierra | Grado de protección: IP67.",
+        caracteristicas: "Tecnología de inserción suave que previene el desgaste prematuro.",
+      },
+
+      // ==========================================================
+      // CATEGORÍA 6: Automatización y Control Industrial (10 productos)
+      // ==========================================================
+      {
+        catIndex: 6,
+        nombre: "Contactor Tripolar 18A Bobina 220VAC Schneider TeSys Deca",
+        precio: 110.0,
+        destacado: true,
+        descripcionCorta: "Contactor electromagnético para control de motores de hasta 10 HP.",
+        descripcionCompleta: "Contactor de potencia Schneider Electric TeSys Deca LC1D18M7 de 18 Amperios en AC-3 (7.5 kW a 400V) con bobina de 220VAC 50/60Hz.",
+        especificacionesTec: "Corriente AC-3: 18A | Potencia: 7.5 kW / 10 HP | Bobina: 220VAC | Contactos auxiliares: 1NA + 1NC.",
+        caracteristicas: "Montaje sobre riel DIN o placa | Vida mecánica: 15 millones de ciclos.",
+      },
+      {
+        catIndex: 6,
+        nombre: "Contactor Tripolar 32A Bobina 220VAC Schneider TeSys Deca",
+        precio: 165.0,
+        destacado: false,
+        descripcionCorta: "Contactor para motores trifásicos de hasta 20 HP.",
+        descripcionCompleta: "Contactor tripolar Schneider LC1D32M7 de 32 Amperios en AC-3 (15 kW a 400V) con bornes de conexión EverLink anti-aflojamiento.",
+        especificacionesTec: "In AC-3: 32A | Bobina: 220VAC | Auxiliares: 1NA + 1NC incorporados.",
+        caracteristicas: "Diseño compacto con supresor de transitorios integrado opcional.",
+      },
+      {
+        catIndex: 6,
+        nombre: "Relé Térmico de Sobrecarga 12-18A Schneider LRD21",
+        precio: 95.0,
+        destacado: false,
+        descripcionCorta: "Protector contra sobrecorrientes prolongadas acoplable al contactor.",
+        descripcionCompleta: "Relé bimetálico diferencial TeSys LRD21 con rango de regulación de 12 a 18A para proteger motores contra sobrecalentamiento y falta de fase.",
+        especificacionesTec: "Rango: 12 a 18A | Clase de disparo: 10A | Contactos: 1NA + 1NC independientes.",
+        caracteristicas: "Selector de rearme manual o automático y botón de parada Stop.",
+      },
+      {
+        catIndex: 6,
+        nombre: "Variador de Frecuencia 3 HP (2.2 kW) 220V Trifásico Delta",
+        precio: 680.0,
+        destacado: true,
+        descripcionCorta: "Controlador de velocidad y torque para motores trifásicos.",
+        descripcionCompleta: "Inversor de frecuencia Delta Electronics serie VFD-EL compacto con entrada monofásica/trifásica 220V y salida trifásica 220V variable de 0 a 400Hz.",
+        especificacionesTec: "Potencia: 2.2 kW / 3 HP | Entrada: 200-240V | Control V/F y vectorial sensorless.",
+        caracteristicas: "Teclado con potenciómetro integrado | Comunicación Modbus RS-485.",
+      },
+      {
+        catIndex: 6,
+        nombre: "Pulsador Metálico Rasante Verde 22mm 1NA Schneider Harmony",
+        precio: 25.0,
+        destacado: false,
+        descripcionCorta: "Botón de marcha industrial para paneles de comando.",
+        descripcionCompleta: "Pulsador Schneider Electric Harmony XB4BA31 de 22 mm de diámetro con bisel metálico cromado y contacto normalmente abierto (1NA).",
+        especificacionesTec: "Diámetro de taladro: 22 mm | Contacto: 1NA (NO) | Tensión: hasta 600V AC/DC | IP66.",
+        caracteristicas: "Retorno por resorte | Resistencia extrema a solventes e impactos mecánicos.",
+      },
+      {
+        catIndex: 6,
+        nombre: "Pulsador Tipo Hongo de Emergencia 40mm con Enclavamiento",
+        precio: 36.0,
+        destacado: true,
+        descripcionCorta: "Parada de emergencia con desenclavamiento por giro.",
+        descripcionCompleta: "Botón tipo hongo rojo de 40mm Schneider Harmony con retención mecánica y contacto de seguridad normalmente cerrado (1NC).",
+        especificacionesTec: "Acción: Bloqueo al pulsar y giro para rearmar | Contacto: 1NC de apertura positiva | IP66 / NEMA 4X.",
+        caracteristicas: "Cumple con normas de seguridad internacional ISO 13850 y EN 60947-5-5.",
+      },
+      {
+        catIndex: 6,
+        nombre: "Luz Piloto LED Roja 22mm 220VAC Schneider Harmony",
+        precio: 19.5,
+        destacado: false,
+        descripcionCorta: "Lámpara de señalización de estado de máquina o falla.",
+        descripcionCompleta: "Indicador luminoso monobloque con LED integrado de alta luminosidad y bajo consumo para montaje en puerta de tablero.",
+        especificacionesTec: "Diámetro: 22 mm | Voltaje: 230-240V AC | Color: Rojo | Vida útil: 100,000 horas.",
+        caracteristicas: "Conexión mediante tornillos de estribo protegidos IP20.",
+      },
+      {
+        catIndex: 6,
+        nombre: "Temporizador Electrónico Multifunción para Riel DIN 12-240V",
+        precio: 72.0,
+        destacado: false,
+        descripcionCorta: "Relé de tiempo con retardo a la conexión y desconexión.",
+        descripcionCompleta: "Temporizador modular multirango (0.1 seg a 100 horas) con 10 funciones programables mediante selectores frontales.",
+        especificacionesTec: "Alimentación: 12 a 240V AC/DC multitensión | Salida: 1 contacto conmutado 16A 250V.",
+        caracteristicas: "Ancho compacto de 1 módulo DIN (17.5 mm) | LEDs indicadores de estado.",
+      },
+      {
+        catIndex: 6,
+        nombre: "Sensor de Proximidad Inductivo M18 NPN NA Omron",
+        precio: 85.0,
+        destacado: false,
+        descripcionCorta: "Detector de piezas metálicas sin contacto físico.",
+        descripcionCompleta: "Sensor inductivo cilíndrico roscado M18 con distancia de detección de 8 mm, salida transistorizada NPN normalmente abierta a 3 hilos.",
+        especificacionesTec: "Distancia nominal: 8 mm no enrasado | Voltaje: 10-30 VDC | Grado: IP67 | Frecuencia: 500 Hz.",
+        caracteristicas: "Cuerpo de latón niquelado con cable de 2 metros de longitud.",
+      },
+      {
+        catIndex: 6,
+        nombre: "Selector de Maneta 2 Posiciones Mantenidas 22mm 1NA",
+        precio: 28.0,
+        destacado: false,
+        descripcionCorta: "Interruptor rotativo Manual / Automático para tableros.",
+        descripcionCompleta: "Interruptor selector Schneider de 2 posiciones fijas a 90° con maneta estándar negra y contacto auxiliar 1NA.",
+        especificacionesTec: "Diámetro: 22 mm | Ángulo de rotación: 90° | Contactos: 1NA 10A 600V.",
+        caracteristicas: "Ideal para conmutación de modos de funcionamiento de bombas.",
+      },
+
+      // ==========================================================
+      // CATEGORÍA 7: Herramientas e Instrumentación (10 productos)
+      // ==========================================================
+      {
+        catIndex: 7,
+        nombre: "Pinza Amperimétrica Digital True-RMS Fluke 323",
+        precio: 520.0,
+        destacado: true,
+        descripcionCorta: "Medidor de corriente AC de 400A para electricistas comerciales.",
+        descripcionCompleta: "Pinza amperimétrica Fluke 323 con medición True-RMS para lecturas precisas en circuitos no lineales. Mide corriente CA hasta 400A, voltaje CA/CC 600V y continuidad.",
+        especificacionesTec: "Corriente CA: 400A | Voltaje: 600V AC/DC | Resistencia: 4000 Ω | Categoría: CAT III 600V / CAT IV 300V.",
+        caracteristicas: "Diseño ergonómico y delgado para acceso a tableros saturados | Incluye estuche y puntas.",
+      },
+      {
+        catIndex: 7,
+        nombre: "Multímetro Digital Automático Uni-T UT89X",
+        precio: 145.0,
+        destacado: false,
+        descripcionCorta: "Multímetro profesional con detector NCV y prueba de temperatura.",
+        descripcionCompleta: "Multímetro digital True RMS con rango automático, medición de hasta 1000V AC/DC, 20A de corriente, capacitancia, frecuencia y linterna trasera.",
+        especificacionesTec: "Voltaje: 1000V | Corriente: 20A | Frecuencia: 10MHz | Resistencia: 60MΩ | Seguridad: CAT III 600V.",
+        caracteristicas: "Doble aislamiento de goma a prueba de caídas de hasta 2 metros.",
+      },
+      {
+        catIndex: 7,
+        nombre: "Detector de Voltaje sin Contacto 90-1000V Fluke 1AC-II",
+        precio: 95.0,
+        destacado: true,
+        descripcionCorta: "Comprobador tipo lápiz que avisa presencia de corriente viva.",
+        descripcionCompleta: "Detector de tensión VoltAlert de Fluke que se ilumina en rojo y emite un pitido audible al acercarse a tomacorrientes, cables o disyuntores energizados.",
+        especificacionesTec: "Rango de detección: 90V a 1000V CA | Frecuencia: 45 a 405 Hz | Certificación: CAT IV 1000V.",
+        caracteristicas: "Punta de prueba que se auto-chequea para garantizar funcionamiento continuo.",
+      },
+      {
+        catIndex: 7,
+        nombre: "Alicate Pelacables Automático 8\" Truper Experto",
+        precio: 48.0,
+        destacado: false,
+        descripcionCorta: "Pela cables de 10 a 24 AWG en un solo movimiento rápido.",
+        descripcionCompleta: "Herramienta multifunción con cuchillas tratadas térmicamente para pelar, cortar y crimpar terminales automotrices y aislados sin dañar el cobre.",
+        especificacionesTec: "Capacidad de pelado: 10 a 24 AWG (0.2 a 6 mm²) | Regulador de longitud y presión.",
+        caracteristicas: "Mango ergonómico bimaterial antideslizante de alta comodidad.",
+      },
+      {
+        catIndex: 7,
+        nombre: "Juego de 6 Destornilladores Aislados 1000V Klein Tools",
+        precio: 165.0,
+        destacado: true,
+        descripcionCorta: "Herramientas de mano certificadas para trabajo seguro con tensión.",
+        descripcionCompleta: "Set de desarmadores planos y Phillips con aislamiento bicapa probado a 10,000V para certificar seguridad de trabajo hasta 1000V según norma VDE/IEC 60900.",
+        especificacionesTec: "3 planos (3/16\", 1/4\", 5/16\") y 3 Phillips (#1, #2, #3) | Aislamiento: 1000VAC.",
+        caracteristicas: "Varillas de acero aleado de alta tenacidad con puntas magnéticas.",
+      },
+      {
+        catIndex: 7,
+        nombre: "Alicate Universal Aislado 8\" 1000V Stanley FatMax",
+        precio: 55.0,
+        destacado: false,
+        descripcionCorta: "Alicate de fuerza con protección dieléctrica certificada.",
+        descripcionCompleta: "Alicate universal de 8 pulgadas forjado en acero cromo vanadio con mangos aislados de dos componentes testeados individualmente a 1000V.",
+        especificacionesTec: "Longitud: 200 mm | Capacidad de corte: Alambre de piano de 2.0 mm | Norma: EN 60900.",
+        caracteristicas: "Filos templados por inducción para máxima duración sin mellarse.",
+      },
+      {
+        catIndex: 7,
+        nombre: "Crimpador Hidráulico Manual para Terminales 16-300 mm²",
+        precio: 290.0,
+        destacado: false,
+        descripcionCorta: "Prensa terminales de alta potencia para cables de gran calibre.",
+        descripcionCompleta: "Herramienta hidráulica manual de 12 toneladas de fuerza para prensado hexagonal de terminales de cobre y aluminio en tableros y transformadores.",
+        especificacionesTec: "Fuerza: 12 Toneladas | Matrices incluidas: 16, 25, 35, 50, 70, 95, 120, 150, 185, 240, 300 mm².",
+        caracteristicas: "Cabezal giratorio 180° y válvula de alivio automático con maletín rígido.",
+      },
+      {
+        catIndex: 7,
+        nombre: "Probador y Rastreador de Cables de Red y Teléfono",
+        precio: 65.0,
+        destacado: false,
+        descripcionCorta: "Generador de tonos y sonda rastreadora para ubicar cables en ductos.",
+        descripcionCompleta: "Equipo localizador de cables con emisor de tono y receptor inductivo para identificar cables en mazos ocultos y testear continuidad en RJ45 y RJ11.",
+        especificacionesTec: "Conectores: RJ45, RJ11 y caimanes tipo cocodrilo | Alarma audible y visual LED.",
+        caracteristicas: "Incluye audífonos para ambientes con alto ruido de obra.",
+      },
+      {
+        catIndex: 7,
+        nombre: "Cinta Pasacable de Fibra de Vidrio 30m con Carrete",
+        precio: 120.0,
+        destacado: false,
+        descripcionCorta: "Guía pasacables rígida que no se enrosca ni se dobla en tuberías.",
+        descripcionCompleta: "Guía de jalado de cables fabricada en fibra de vidrio recubierta de polipropileno con dispensador giratorio y punta metálica flexible con ojillo.",
+        especificacionesTec: "Diámetro: 4.5 mm | Longitud: 30 metros | Fuerza de tracción: 150 kg.",
+        caracteristicas: "Cero conducción eléctrica, ideal para trabajar cerca de circuitos vivos.",
+      },
+      {
+        catIndex: 7,
+        nombre: "Termómetro Infrarrojo Láser Digital -50°C a 550°C",
+        precio: 75.0,
+        destacado: false,
+        descripcionCorta: "Detección rápida de puntos calientes en tableros y bornes.",
+        descripcionCompleta: "Pirómetro óptico con puntero láser dual para inspección predictiva de sobrecalentamiento en barras de cobre, contactores y bornes sueltos.",
+        especificacionesTec: "Rango: -50°C a +550°C | Relación óptica: 12:1 | Emisividad ajustable: 0.10 a 1.00.",
+        caracteristicas: "Pantalla retroiluminada a color con lectura máxima/mínima instantánea.",
+      },
+
+      // ==========================================================
+      // CATEGORÍA 8: Sistemas de Puesta a Tierra (10 productos)
+      // ==========================================================
+      {
+        catIndex: 8,
+        nombre: "Varilla de Cobre Puro 3/4\" x 2.40m para Pozo a Tierra",
+        precio: 165.0,
+        destacado: true,
+        descripcionCorta: "Electrodo de puesta a tierra de máxima conductividad y duración.",
+        descripcionCompleta: "Electrodo de cobre electrolítico de 99.9% de pureza con punta afilada y cabeza plana para dispersar corrientes de cortocircuito en el terreno.",
+        especificacionesTec: "Diámetro: 3/4\" (19 mm) | Longitud: 2.40 metros | Cobre electrolítico de alta pureza.",
+        caracteristicas: "No se corroe con el tiempo como las varillas cobreadas delgadas (copperweld).",
+      },
+      {
+        catIndex: 8,
+        nombre: "Varilla Copperweld 5/8\" x 2.40m con Capa de Cobre 254um",
+        precio: 65.0,
+        destacado: false,
+        descripcionCorta: "Varilla de acero revestida con capa gruesa de cobre electrolítico.",
+        descripcionCompleta: "Electrodo bimetálico con núcleo de acero de alta resistencia mecánica para clavado y recubrimiento electrolítico de cobre certificado de 254 micras.",
+        especificacionesTec: "Diámetro: 5/8\" | Largo: 2.40 m | Capa de cobre: ≥254 micras | Norma: UL 467.",
+        caracteristicas: "Punta biselada para facilitar penetración en suelos pedregosos.",
+      },
+      {
+        catIndex: 8,
+        nombre: "Dosis Químico Thor Gel para Tratamiento de Pozo a Tierra",
+        precio: 55.0,
+        destacado: true,
+        descripcionCorta: "Gel electrolítico mejorador de conductividad de baja lixiviación.",
+        descripcionCompleta: "Compuesto químico no corrosivo en dos componentes (A y B) que forma un gel gelatinoso insoluble que reduce drásticamente la resistencia del suelo.",
+        especificacionesTec: "Dosis: Caja con compuesto azul y amarillo de 5 kg c/u | Vida útil: 3 a 5 años.",
+        caracteristicas: "No daña la varilla de cobre ni contamina las capas freáticas.",
+      },
+      {
+        catIndex: 8,
+        nombre: "Saco de Bentonita Sódica 30 kg para Pozo a Tierra",
+        precio: 28.0,
+        destacado: false,
+        descripcionCorta: "Arcilla natural retenedora de humedad para tierras arenosas.",
+        descripcionCompleta: "Bentonita sódica en polvo de alta capacidad de hinchamiento que absorbe hasta 5 veces su peso en agua para mantener húmedo el contorno del electrodo.",
+        especificacionesTec: "Presentación: Saco de papel de 30 kg | Retención hídrica prolongada.",
+        caracteristicas: "Disminuye la resistividad aparente en terrenos rocosos o secos.",
+      },
+      {
+        catIndex: 8,
+        nombre: "Conector de Bronce Tipo AB 3/4\" para Varilla y Cable",
+        precio: 14.5,
+        destacado: false,
+        descripcionCorta: "Grapa de alta presión para unión de electrodo a cable de tierra.",
+        descripcionCompleta: "Conector mecánico de bronce fundido con tornillo perno de presión para fijar cables de 16 a 50 mm² a la varilla de tierra de 3/4\".",
+        especificacionesTec: "Material: Bronce siliconado resistente a corrosión galvánica | Perno de apriete hexagonal.",
+        caracteristicas: "Proporciona contacto firme y confiable sin necesidad de soldadura.",
+      },
+      {
+        catIndex: 8,
+        nombre: "Caja de Registro de Polipropileno para Pozo a Tierra 30cm",
+        precio: 32.0,
+        destacado: true,
+        descripcionCorta: "Cámara de inspección liviana y resistente para mantenimiento.",
+        descripcionCompleta: "Caja cónica de polipropileno con tapa roscada o a presión para alojar la cabeza de la varilla de tierra permitiendo medición periódica con telurómetro.",
+        especificacionesTec: "Diámetro: 30 cm | Altura: 25 cm | Resistencia a la carga: Hasta 1.5 toneladas.",
+        caracteristicas: "No se raja como el concreto y resiste el paso de vehículos livianos.",
+      },
+      {
+        catIndex: 8,
+        nombre: "Cartucho de Soldadura Exotérmica 90g Cadweld",
+        precio: 28.0,
+        destacado: false,
+        descripcionCorta: "Carga de polvo para unión molecular permanente por termofusión.",
+        descripcionCompleta: "Polvo exotérmico a base de óxido de cobre y aluminio para soldadura molecular de cable a varilla sin conexiones mecánicas que se aflojen.",
+        especificacionesTec: "Carga: 90 gramos | Incluye disco metálico retenedor y pólvora de ignición.",
+        caracteristicas: "Conexión molecular indestructible con conductividad idéntica al cobre.",
+      },
+      {
+        catIndex: 8,
+        nombre: "Molde de Grafito para Soldadura Cable a Varilla 3/4\"",
+        precio: 180.0,
+        destacado: false,
+        descripcionCorta: "Molde mecanizado de alta pureza para realizar hasta 50 disparos.",
+        descripcionCompleta: "Bloque de grafito mecanizado con cavidad para alojar varilla de 3/4\" y cable de 35 a 50 mm² durante la reacción exotérmica de fusión.",
+        especificacionesTec: "Grafito de alta densidad | Resistencia térmica: >2000°C | Vida útil: 50 a 60 uniones.",
+        caracteristicas: "Cierre hermético con tenaza de sujeción estándar.",
+      },
+      {
+        catIndex: 8,
+        nombre: "Barra Equipotencial de Cobre con Aisladores 6 Bornes",
+        precio: 85.0,
+        destacado: false,
+        descripcionCorta: "Pletina para unificar todas las líneas de tierra en sala de tableros.",
+        descripcionCompleta: "Barra de cobre electrolítico de 5x25x250 mm montada sobre aisladores de resina roja de 1 kV con pernos de acero inoxidable para conexión de terminales.",
+        especificacionesTec: "Pletina: Cobre 99.9% | Dimensiones: 5 x 25 x 250 mm | 6 pernos de 1/4\" con tuerca.",
+        caracteristicas: "Aislada de la pared mediante soportes rígidos certificados.",
+      },
+      {
+        catIndex: 8,
+        nombre: "Cemento Conductivo CEM-GEL Saco 25 kg",
+        precio: 89.0,
+        destacado: false,
+        descripcionCorta: "Compuesto a base de carbono que no requiere mantenimiento de agua.",
+        descripcionCompleta: "Cemento de muy baja resistividad que endurece como roca alrededor del electrodo creando una superficie de contacto gigante con el terreno.",
+        especificacionesTec: "Resistividad: < 0.2 Ω·m | Presentación: 25 kg | No corrosivo para el cobre.",
+        caracteristicas: "Ideal para cerros, arena seca y terrenos de muy difícil disipación.",
+      },
+
+      // ==========================================================
+      // CATEGORÍA 9: Seguridad y EPP Eléctrico (10 productos)
+      // ==========================================================
+      {
+        catIndex: 9,
+        nombre: "Guantes Dieléctricos Clase 0 (1000V) Regeltex",
+        precio: 165.0,
+        destacado: true,
+        descripcionCorta: "Protección contra descargas eléctricas en baja tensión hasta 1000V.",
+        descripcionCompleta: "Guantes de látex natural flexible de alta destreza probados individualmente a 5000V para uso seguro en maniobras de hasta 1000V CA.",
+        especificacionesTec: "Clase: 0 | Tensión de trabajo: 1000V CA / 1500V CC | Tensión de prueba: 5000V | Norma: EN 60903 / IEC 60903.",
+        caracteristicas: "Largo: 36 cm | Forma anatómica para evitar fatiga de mano | Talla 9 y 10.",
+      },
+      {
+        catIndex: 9,
+        nombre: "Sobreguantes de Cuero Protector para Guante Dieléctrico",
+        precio: 45.0,
+        destacado: false,
+        descripcionCorta: "Protege el guante de goma contra cortes, rebabas y desgarros.",
+        descripcionCompleta: "Guantes de cuero de vaqueta suave con puño de descarne y correa de ajuste dorsal para colocar encima del guante dieléctrico de goma.",
+        especificacionesTec: "Material: Cuero flor vacuno | Costuras de hilo de aramida resistente al roce.",
+        caracteristicas: "Obligatorio para evitar perforaciones que anulen la aislación eléctrica.",
+      },
+      {
+        catIndex: 9,
+        nombre: "Casco de Seguridad Dieléctrico Tipo I Clase E 20kV 3M",
+        precio: 38.0,
+        destacado: true,
+        descripcionCorta: "Protección contra impacto mecánico y contacto eléctrico de alta tensión.",
+        descripcionCompleta: "Casco 3M H-700 fabricado en polietileno de alta densidad probado contra descargas de hasta 20,000 voltios según norma ANSI Z89.1 Clase E.",
+        especificacionesTec: "Aislamiento: Clase E (20,000 V) | Suspensión: Ratchet de 4 puntos ajustable | Color: Blanco.",
+        caracteristicas: "Ranuras universales para acoplar orejeras o careta de protección facial.",
+      },
+      {
+        catIndex: 9,
+        nombre: "Careta de Protección Facial contra Arco Eléctrico 12 cal/cm²",
+        precio: 280.0,
+        destacado: true,
+        descripcionCorta: "Pantalla protectora para maniobras con riesgo de explosión de arco.",
+        descripcionCompleta: "Pantalla facial de policarbonato con nanopartículas absorbentes con clasificación Arc Flash de 12 cal/cm² y mentonera protectora incorporada.",
+        especificacionesTec: "Protección Arc Flash: 12 cal/cm² (ATPV) | Norma: NFPA 70E / ASTM F2178 | Alta transmisión de luz.",
+        caracteristicas: "Se monta sobre casco dieléctrico mediante soporte pivotante.",
+      },
+      {
+        catIndex: 9,
+        nombre: "Botines de Seguridad Dieléctricos Punta de Composite CAT",
+        precio: 340.0,
+        destacado: true,
+        descripcionCorta: "Calzado aislante sin partes metálicas para electricistas.",
+        descripcionCompleta: "Botas de seguridad Caterpillar con puntera de fibra composite no conductora, cuero hidrofugado y suela de caucho resistente a 18,000V en condiciones secas.",
+        especificacionesTec: "Aislamiento: ASTM F2413-18 EH (18kV a 60Hz durante 1 min) | Puntera: Composite liviana.",
+        caracteristicas: "Suela antideslizante con dibujo de evacuación rápida de líquidos y aceites.",
+      },
+      {
+        catIndex: 9,
+        nombre: "Alfombra Dieléctrica de Caucho Clase 2 (17,000V) 1m x 1m",
+        precio: 145.0,
+        destacado: false,
+        descripcionCorta: "Manta aislante para piso frente a tableros de control y celdas.",
+        descripcionCompleta: "Tapete de goma elastomérica estriada para piso que aísla al operador de tierra durante maniobras de apertura de interruptores de potencia.",
+        especificacionesTec: "Espesor: 4.5 mm | Clase 2 (Tensión de uso: 17,000V CA) | Dimensiones: 1000 x 1000 mm.",
+        caracteristicas: "Superficie corrugada antideslizante | Retardante a la llama.",
+      },
+      {
+        catIndex: 9,
+        nombre: "Candado de Bloqueo LOTO Rojo Llave Diferente Master Lock",
+        precio: 35.0,
+        destacado: false,
+        descripcionCorta: "Bloqueo y etiquetado de seguridad para consignación de tableros.",
+        descripcionCompleta: "Candado de seguridad industrial Master Lock Zenex con arco de acero y cuerpo de termoplástico dieléctrico no magnético, llave retenida al abrir.",
+        especificacionesTec: "Arco: 38 mm altura | Material: Termoplástico no conductor | Llave única diferente (KD).",
+        caracteristicas: "Incluye etiquetas bilingües de advertencia 'PELIGRO - EQUIPO BLOQUEADO'.",
+      },
+      {
+        catIndex: 9,
+        nombre: "Pinza de Bloqueo Múltiple de Mandíbula de Acero 1\"",
+        precio: 18.0,
+        destacado: false,
+        descripcionCorta: "Permite colocar hasta 6 candados simultáneos en una misma llave.",
+        descripcionCompleta: "Aldaba de bloqueo múltiple con mandíbula de acero revestida de vinilo rojo para que varios trabajadores consignen la misma fuente de energía a la vez.",
+        especificacionesTec: "Diámetro de mandíbula: 25 mm (1\") | Capacidad: Hasta 6 candados de vástago de 9 mm.",
+        caracteristicas: "El equipo no se puede energizar hasta que el último operario retire su candado.",
+      },
+      {
+        catIndex: 9,
+        nombre: "Banqueta Aislante Dieléctrica de Maniobra 24kV Exterior",
+        precio: 310.0,
+        destacado: false,
+        descripcionCorta: "Plataforma portátil de fibra de vidrio para subestaciones.",
+        descripcionCompleta: "Taburete aislante con patas inclinadas desmontables de polietileno con faldón protector y superficie con relieves antideslizantes.",
+        especificacionesTec: "Tensión máxima: 24,000V | Dimensiones: 500 x 500 x 300 mm | Carga máxima: 150 kg.",
+        caracteristicas: "Excelente estabilidad con tacos de goma en la base de las patas.",
+      },
+      {
+        catIndex: 9,
+        nombre: "Pértiga Telescópica de Rescate Eléctrico 1.8m con Gancho",
+        precio: 260.0,
+        destacado: false,
+        descripcionCorta: "Herramienta de emergencia para separar víctimas en contacto con corriente.",
+        descripcionCompleta: "Vara rígida de fibra de vidrio rellena de espuma de poliuretano con gancho de acero templado recubierto para rescate seguro de personas electrocutadas.",
+        especificacionesTec: "Longitud: 1.8 metros | Tensión de aislamiento: 100 kV/pie | Diámetro tubo: 32 mm.",
+        caracteristicas: "Elemento de seguridad obligatorio en toda sala eléctrica o subestación.",
+      },
+    ];
+
+    console.log(`Insertando ${productosData.length} productos en la base de datos...`);
+    const productosParaInsertar = productosData.map((p) => ({
+      nombre: p.nombre,
+      productoDestacado: p.destacado,
+      especificacionesTec: p.especificacionesTec,
+      idCategoria: cat[p.catIndex]._id,
       idAdministrador: savedAdmin._id,
-      precio: 120.50,
-      caracteristicas: "Rollo de 100 metros. Color Rojo.",
-      descripcionCorta: "Cable ideal para instalaciones domésticas",
-      descripcionCompleta: "El cable THW es un conductor de cobre suave o recocido..."
-    });
-    await producto.save();
+      precio: p.precio,
+      caracteristicas: p.caracteristicas,
+      descripcionCorta: p.descripcionCorta,
+      descripcionCompleta: p.descripcionCompleta,
+      estado: true,
+      fechaRegistro: new Date(),
+      fechaActualizacion: new Date(),
+    }));
 
-    console.log("¡Base de datos inicializada con éxito!");
+    const productosGuardados = await Producto.insertMany(productosParaInsertar);
+
+    console.log("Generando imágenes ilustrativas asociadas para cada producto...");
+    const imagenesParaInsertar = productosGuardados.map((prod, idx) => {
+      const pData = productosData[idx];
+      const colorCat = categoriasData[pData.catIndex].color;
+      return {
+        idProducto: prod._id,
+        tipo: "image/svg+xml",
+        ubicacion: generarSvgBase64(prod.nombre, colorCat),
+        almacenamiento: "base64",
+      };
+    });
+
+    await Imagen.insertMany(imagenesParaInsertar);
+
+    console.log("==================================================");
+    console.log("¡SEED EXITOSO!");
+    console.log(`- 1 Administrador creado (${savedAdmin.correo})`);
+    console.log(`- 1 Empresa registrada (${empresa.nombre})`);
+    console.log(`- ${categoriasInsertadas.length} Categorías eléctricas creadas`);
+    console.log(`- ${productosGuardados.length} Productos reales catalogados`);
+    console.log(`- ${imagenesParaInsertar.length} Imágenes asociadas generadas`);
+    console.log("==================================================");
+
     process.exit(0);
   } catch (error) {
-    console.error("Error al inicializar la base de datos:", error);
+    console.error("Error al inicializar la base de datos con seed:", error);
     process.exit(1);
   }
 };

@@ -1,10 +1,12 @@
-import { Administrador } from "../models/Administrador.js";
+import { usuariosService } from "../services/usuarios.service.js";
 
-export const getUsuarios = async (req, res) => {
+const getUsuarios = async (req, res, next) => {
   try {
-    const usuarios = await Administrador.find();
-    res.status(200).json(usuarios);
+    const usuarios = await usuariosService.listarTodos();
+    return res.status(200).json(usuarios);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
+
+export { getUsuarios };
