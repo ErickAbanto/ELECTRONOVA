@@ -107,6 +107,8 @@ const productosService = {
 
     if (datos.productoDestacado === "true") datos.productoDestacado = true;
     if (datos.productoDestacado === "false") datos.productoDestacado = false;
+    if (datos.estado === "true") datos.estado = true;
+    if (datos.estado === "false") datos.estado = false;
     datos.fechaActualizacion = new Date();
 
     const productoActualizado = await Producto.findByIdAndUpdate(id, datos, {

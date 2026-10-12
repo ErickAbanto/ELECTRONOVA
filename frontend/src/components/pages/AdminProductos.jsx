@@ -26,6 +26,7 @@ function AdminProductos() {
     especificacionesTec: '',
     caracteristicas: '',
     productoDestacado: false,
+    estado: true,
     imagenes: [],
     previewImagenes: []
   };
@@ -93,6 +94,19 @@ function AdminProductos() {
     }
   };
 
+  const handleToggleEstado = async (prod) => {
+    const nuevoEstado = prod.estado === false ? true : false;
+    try {
+      const formData = new FormData();
+      formData.append('estado', nuevoEstado);
+      await productosService.update(prod._id || prod.idProducto, formData);
+      cargarDatos();
+    } catch (error) {
+      console.error('Error al cambiar estado:', error);
+      alert('No se pudo actualizar el estado del producto');
+    }
+  };
+
   const productosFiltrados = productos.filter(p => 
     p.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
@@ -128,6 +142,7 @@ function AdminProductos() {
         categorias={categorias}
         onEdit={abrirModalEditar}
         onDelete={handleEliminar}
+        onToggleEstado={handleToggleEstado}
       />
 
       {modalAbierto && (

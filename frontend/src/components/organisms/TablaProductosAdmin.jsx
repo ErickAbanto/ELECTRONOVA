@@ -1,7 +1,7 @@
 
 import { Edit2, Trash2, ImageIcon } from 'lucide-react';
 
-const TablaProductosAdmin = ({ productos, categorias, onEdit, onDelete }) => {
+const TablaProductosAdmin = ({ productos, categorias, onEdit, onDelete, onToggleEstado }) => {
   
   const getCategoriaNombre = (id) => {
     if (typeof id === 'object' && id !== null) return id.nombre;
@@ -53,19 +53,25 @@ const TablaProductosAdmin = ({ productos, categorias, onEdit, onDelete }) => {
                 <td>S/ {prod.precio?.toFixed(2) || '0.00'}</td>
                 <td>{prod.productoDestacado ? 'Sí' : 'No'}</td>
                 <td>
-                  <span 
+                  <button
+                    type="button"
+                    onClick={() => onToggleEstado ? onToggleEstado(prod) : onEdit(prod)}
                     className={`badge-estado ${prod.estado !== false ? 'activo' : 'inactivo'}`}
                     style={{
-                      padding: '4px 8px',
+                      padding: '4px 10px',
                       borderRadius: '12px',
                       fontSize: '0.8rem',
                       fontWeight: 'bold',
+                      border: 'none',
+                      cursor: 'pointer',
                       backgroundColor: prod.estado !== false ? '#e6f4ea' : '#fce8e6',
-                      color: prod.estado !== false ? '#137333' : '#c5221f'
+                      color: prod.estado !== false ? '#137333' : '#c5221f',
+                      transition: 'all 0.2s ease'
                     }}
+                    title="Haz clic para cambiar el estado (Activo / Inactivo)"
                   >
-                    {prod.estado !== false ? 'Activo' : 'Inactivo'}
-                  </span>
+                    {prod.estado !== false ? '● Activo' : '○ Inactivo'}
+                  </button>
                 </td>
                 <td>
                   <div className="acciones-celda">
