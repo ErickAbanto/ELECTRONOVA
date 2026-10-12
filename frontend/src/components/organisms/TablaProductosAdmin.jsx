@@ -27,6 +27,7 @@ const TablaProductosAdmin = ({ productos, categorias, onEdit, onDelete }) => {
             <th>Categoría</th>
             <th>Precio</th>
             <th>Destacado</th>
+            <th>Estado</th>
             <th>Acciones</th>
           </tr>
         </thead>
@@ -51,6 +52,21 @@ const TablaProductosAdmin = ({ productos, categorias, onEdit, onDelete }) => {
                 <td>{getCategoriaNombre(prod.idCategoria)}</td>
                 <td>S/ {prod.precio?.toFixed(2) || '0.00'}</td>
                 <td>{prod.productoDestacado ? 'Sí' : 'No'}</td>
+                <td>
+                  <span 
+                    className={`badge-estado ${prod.estado !== false ? 'activo' : 'inactivo'}`}
+                    style={{
+                      padding: '4px 8px',
+                      borderRadius: '12px',
+                      fontSize: '0.8rem',
+                      fontWeight: 'bold',
+                      backgroundColor: prod.estado !== false ? '#e6f4ea' : '#fce8e6',
+                      color: prod.estado !== false ? '#137333' : '#c5221f'
+                    }}
+                  >
+                    {prod.estado !== false ? 'Activo' : 'Inactivo'}
+                  </span>
+                </td>
                 <td>
                   <div className="acciones-celda">
                     <button className="btn-accion btn-editar" onClick={() => onEdit(prod)} title="Editar">

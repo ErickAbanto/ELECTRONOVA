@@ -3,19 +3,21 @@ import { Imagen } from "../models/Imagen.js";
 import { comprimirImagenABase64 } from "../utils/image.util.js";
 
 const productosService = {
-  async getProductos(page = 1, limit = 10) {
+  async getProductos(page = 1, limit = 10, soloActivos = false) {
     const pagina = Math.max(1, Number(page) || 1);
     const limite = Math.max(1, Number(limit) || 10);
     const skip = (pagina - 1) * limite;
 
+    const query = soloActivos ? { estado: true } : {};
+
     const [productos, total] = await Promise.all([
-      Producto.find()
+      Producto.find(query)
         .populate("idCategoria")
         .populate({ path: "imagenes", perDocumentLimit: 1 })
         .sort({ updatedAt: -1, fechaRegistro: -1 })
         .skip(skip)
         .limit(limite),
-      Producto.countDocuments(),
+      Producto.countDocuments(query),
     ]);
 
     const totalPages = Math.ceil(total / limite) || 1;

@@ -69,6 +69,9 @@ const deleteCategoria = async (req, res, next) => {
 
     return res.status(200).json({ message: "Categoría eliminada exitosamente" });
   } catch (error) {
+    if (error.status) {
+      return res.status(error.status).json({ message: error.message });
+    }
     next(error);
   }
 };

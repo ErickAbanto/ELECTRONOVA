@@ -1,4 +1,5 @@
 import { Categoria } from "../models/Categoria.js";
+import { Producto } from "../models/Producto.js";
 
 const categoriasService = {
   async listarTodas() {
@@ -21,6 +22,14 @@ const categoriasService = {
   },
 
   async eliminar(id) {
+    const productosAsociados = await Producto.countDocuments({ idCategoria: id });
+    if (productosAsociados > 0) {
+      const error = new Error(
+        `No se puede eliminar la categoría porque tiene ${productosAsociados} producto(s) asociado(s).`
+      );
+      error.status = 400;
+      throw error;
+    }
     return await Categoria.findByIdAndDelete(id);
   },
 };
