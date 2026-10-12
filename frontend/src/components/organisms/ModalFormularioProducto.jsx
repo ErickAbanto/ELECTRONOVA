@@ -81,6 +81,7 @@ const ModalFormularioProducto = ({ modoEdicion, productoInicial, categorias, onC
       formData.append('especificacionesTec', productoActual.especificacionesTec);
       formData.append('caracteristicas', productoActual.caracteristicas);
       formData.append('productoDestacado', productoActual.productoDestacado);
+      formData.append('estado', productoActual.estado !== false);
       formData.append('idAdministrador', admin?.id || admin?._id);
       
       if (productoActual.imagenes && productoActual.imagenes.length > 0) {
@@ -165,10 +166,15 @@ const ModalFormularioProducto = ({ modoEdicion, productoInicial, categorias, onC
                 <textarea name="caracteristicas" value={productoActual.caracteristicas} onChange={handleInputChange} rows="3"></textarea>
               </div>
 
-              <div className="form-grupo">
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', backgroundColor: '#f8f9fa', padding: '1rem', borderRadius: '6px' }}>
+              <div className="form-grupo" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', backgroundColor: '#f8f9fa', padding: '0.8rem', borderRadius: '6px', fontSize: '0.9rem' }}>
                   <input type="checkbox" name="productoDestacado" checked={productoActual.productoDestacado} onChange={handleInputChange} style={{ width: 'auto' }} />
-                  Mostrar en página de inicio (Producto Destacado)
+                  Destacado (Inicio)
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', backgroundColor: productoActual.estado !== false ? '#e6f4ea' : '#fce8e6', padding: '0.8rem', borderRadius: '6px', fontSize: '0.9rem', color: productoActual.estado !== false ? '#137333' : '#c5221f', fontWeight: 'bold' }}>
+                  <input type="checkbox" name="estado" checked={productoActual.estado !== false} onChange={handleInputChange} style={{ width: 'auto' }} />
+                  {productoActual.estado !== false ? 'Producto Activo' : 'Producto Inactivo'}
                 </label>
               </div>
 
