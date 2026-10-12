@@ -12,7 +12,7 @@ const productosService = {
       Producto.find()
         .populate("idCategoria")
         .populate({ path: "imagenes", perDocumentLimit: 1 })
-        .sort({ fechaRegistro: -1 })
+        .sort({ updatedAt: -1, fechaRegistro: -1 })
         .skip(skip)
         .limit(limite),
       Producto.countDocuments(),
@@ -105,6 +105,7 @@ const productosService = {
 
     if (datos.productoDestacado === "true") datos.productoDestacado = true;
     if (datos.productoDestacado === "false") datos.productoDestacado = false;
+    datos.fechaActualizacion = new Date();
 
     const productoActualizado = await Producto.findByIdAndUpdate(id, datos, {
       returnDocument: "after",
@@ -184,7 +185,7 @@ const productosService = {
       Producto.find(query)
         .populate("idCategoria")
         .populate({ path: "imagenes", perDocumentLimit: 1 })
-        .sort({ fechaRegistro: -1 })
+        .sort({ updatedAt: -1, fechaRegistro: -1 })
         .skip(skip)
         .limit(limite),
       Producto.countDocuments(query),
@@ -216,7 +217,7 @@ const productosService = {
       Producto.find(query)
         .populate("idCategoria")
         .populate({ path: "imagenes", perDocumentLimit: 1 })
-        .sort({ fechaRegistro: -1 })
+        .sort({ updatedAt: -1, fechaRegistro: -1 })
         .skip(skip)
         .limit(limite),
       Producto.countDocuments(query),
